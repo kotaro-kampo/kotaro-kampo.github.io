@@ -88,12 +88,12 @@ function q0(n) {
 }
 
 function L0(n) {
-    let r = n.replace(/[（(][^）)]*[）)]/g, "").replace(/\s+/g, " ").trim();
+    let r = n.replace(/[（(].*/g, "").replace(/\s+/g, " ").trim();
     return r = q0(r), r;
 }
 
 function U0(n) {
-    let r = n.replace(/[（(][^）)]*[）)]/g, "").replace(/\s+/g, " ").trim();
+    let r = n.replace(/[（(].*/g, "").replace(/\s+/g, " ").trim();
     return r = q0(r), r;
 }
 
@@ -157,7 +157,7 @@ function _A(table, $) {
         else amountStr = `${m[1]}g`;
         
         const isExtract = h.includes("エキス") || h.includes("水製");
-        h = h.replace(/[（(].*?[）)]/g, "").trim();
+        h = h.replace(/[（(].*/g, "").trim();
         r.push({ name: h, amount: p, amountStr, isExtract });
     });
     return r;
@@ -171,7 +171,7 @@ function Ey(n) {
         let d = s[1].replace(/^日局/, "").trim();
         d = d.replace(/^.*?((?:水製乾燥|水製|乾燥)?エキス)$/, "$1");
         if (d && !d.includes("ゼラチン")) {
-            d = d.replace(/[（(].*?[）)]/g, "").trim();
+            d = d.replace(/[（(].*/g, "").trim();
             r.push({ name: d, amount: parseFloat(s[2]), amountStr: `${s[2]}g`, isExtract: true });
         }
     }
@@ -179,7 +179,7 @@ function Ey(n) {
     let f;
     while ((f = o.exec(l)) !== null) {
         let d = f[1].trim();
-        d = d.replace(/[（(].*?[）)]/g, "").trim();
+        d = d.replace(/[（(].*/g, "").trim();
         r.push({ name: d, amount: parseFloat(f[2]), amountStr: `${f[2]}g`, isExtract: false });
     }
     if (r.filter(x => !x.isExtract).length === 0) {
@@ -188,7 +188,7 @@ function Ey(n) {
         while ((f2 = d2.exec(l)) !== null) {
             let d3 = f2[1].trim();
             if (d3 !== "水製エキス" && d3 !== "乾燥エキス" && !d3.includes("ゼラチン")) {
-                d3 = d3.replace(/[（(].*?[）)]/g, "").trim();
+                d3 = d3.replace(/[（(].*/g, "").trim();
                 r.push({ name: d3, amount: parseFloat(f2[2]), amountStr: `${f2[2]}g`, isExtract: false });
             }
         }
@@ -209,7 +209,7 @@ function zA(table, $) {
             if (name && m) {
                 const amount = parseFloat(m[1]);
                 const isExtract = name.includes("エキス") || name.includes("水製");
-                name = name.replace(/[（(].*?[）)]/g, "").trim();
+                name = name.replace(/[（(].*/g, "").trim();
                 r.push({ name, amount, amountStr: `${m[1]}g`, isExtract });
             }
         }
