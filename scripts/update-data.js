@@ -14,6 +14,7 @@ function xA(n) {
             .replace(/【.*?】/g, "")
             .replace(/（.*?）/g, "")
             .replace(/\(.*?\)/g, "")
+            .replace(/[）)]/g, "")
             .replace(/®/g, "")
             .replace(/エキス/g, "")
             .replace(/顆粒/g, "")
@@ -21,6 +22,7 @@ function xA(n) {
             .replace(/カプセル/g, "")
             .replace(/錠/g, "")
             .replace(/水製/g, "")
+            .replace(/分包/g, "")
             .replace(/N$/i, "n")
             .replace(/S$/i, "s")
             .replace(/G$/i, "g")
@@ -58,7 +60,9 @@ async function fetchKotaroBadges() {
                 }
             });
             if (cat !== 'other') {
-                map[U0(xA(name))] = cat;
+                const key = U0(xA(name));
+                if (key === "ヨクイニンs") cat = "kyoryokukai";
+                map[key] = cat;
             }
         }
     });
@@ -384,7 +388,7 @@ async function main() {
             if (!a.length) return;
             const w = a.attr("href").replace(/^\//, "");
             const x = a.text().trim();
-            const O = $(tds[1]).text().trim();
+            const O = $(tds[2]).text().trim();
             const C = L0(O);
             const N = U0(x); // Keep original display name with Kanji conversion!
             const sortKey = Q0(N); // Convert Kanji to Hiragana for perfect Gojuon sorting

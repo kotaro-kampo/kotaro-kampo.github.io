@@ -1,0 +1,1 @@
+const cheerio=require('cheerio'); async function run(){const res=await fetch('https://www.kotaro.co.jp/iryou/product_list/');const html=await res.text();const $=cheerio.load(html);$('tr').each((_,tr)=>{const name=$(tr).find('td').eq(1).text().trim(); if(name.includes('ショーケン')) console.log(name);});}run();

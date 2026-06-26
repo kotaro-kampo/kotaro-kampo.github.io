@@ -1,0 +1,11 @@
+const cheerio=require('cheerio'); 
+async function run(){
+    const res=await fetch('https://www.kegg.jp/medicus-bin/search_drug?display=otc&search_keyword=%e5%b0%8f%e5%a4%aa%e9%83%8e%e6%bc%a2%e6%96%b9%e8%a3%bd%e8%96%ac&page=1');
+    const html=await res.text();
+    const $=cheerio.load(html);
+    $('table.list1 tr').slice(0,2).each((_,tr)=>{
+        const tds=$(tr).find('td');
+        console.log('TD1:',$(tds[0]).text().trim(), 'TD2:', $(tds[1]).text().trim());
+    });
+}
+run();
