@@ -330,6 +330,13 @@ async function fetchDetails(url, type) {
         else if (/用法に関する注意/.test(p)) r.usageNotes = v;
     });
 
+    Object.keys(r).forEach(k => {
+        if (typeof r[k] === 'string') {
+            r[k] = r[k].replace(/，/g, '、');
+        } else if (Array.isArray(r[k])) {
+            r[k] = r[k].map(s => typeof s === 'string' ? s.replace(/，/g, '、') : s);
+        }
+    });
     return r;
 }
 
