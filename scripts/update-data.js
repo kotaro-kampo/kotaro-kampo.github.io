@@ -61,7 +61,7 @@ async function fetchKotaroBadges() {
             });
             if (cat !== 'other') {
                 const key = U0(xA(name));
-                if (key === "ヨクイニンs") cat = "kyoryokukai_visual";
+                if (key === "ヨクイニンs") cat = "kyoryokukai";
                 map[key] = cat;
             }
         }
@@ -405,6 +405,10 @@ async function main() {
             const B = badgeMap[matchKey] || "other";
             
             allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: B, subCategory: C, sortKey: sortKey });
+            
+            if (matchKey === "ヨクイニンs") {
+                allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: "visual", subCategory: C, sortKey: sortKey });
+            }
             found++;
         });
         

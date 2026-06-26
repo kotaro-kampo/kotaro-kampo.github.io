@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kotaro-kampo-cache-v15';
+const CACHE_NAME = 'kotaro-kampo-cache-v16';
 
 // インストール時にすぐに有効化する
 self.addEventListener('install', event => {
