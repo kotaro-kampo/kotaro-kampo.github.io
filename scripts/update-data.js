@@ -61,7 +61,7 @@ async function fetchKotaroBadges() {
             });
             if (cat !== 'other') {
                 const key = U0(xA(name));
-                if (key === "ヨクイニンs") cat = "kyoryokukai";
+                if (key === "ヨクイニンs") cat = "visual";
                 map[key] = cat;
             }
         }
