@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const cheerio = require('cheerio');
+const B0 = require('./B0.js');
 
 const Si = "https://www.kegg.jp";
 
@@ -57,7 +58,7 @@ async function fetchKotaroBadges() {
                 }
             });
             if (cat !== 'other') {
-                map[xA(name)] = cat;
+                map[U0(xA(name))] = cat;
             }
         }
     });
@@ -96,6 +97,27 @@ function U0(n) {
     return r = q0(r), r;
 }
 
+function Q0(n) {
+    let r = n, l = "", s = r;
+    while (s.length > 0) {
+        let o = false;
+        for (const [f, d] of B0) {
+            const h = s.match(f);
+            if (h && h.index === 0) {
+                l += d;
+                s = s.slice(h[0].length);
+                o = true;
+                break;
+            }
+        }
+        if (!o) {
+            l += s[0];
+            s = s.slice(1);
+        }
+    }
+    return l.replace(/[ァ-ン]/g, o => String.fromCharCode(o.charCodeAt(0) - 96)).toLowerCase();
+}
+
 function Y0(el, $) {
     let text = "";
     let curr = $(el).next();
@@ -121,7 +143,7 @@ function _A(table, $) {
         if (tds.length !== 2) return;
         const f = $(tds[0]).text().trim();
         const d = $(tds[1]).text().trim();
-        const h = qo(f);
+        let h = qo(f);
         if (!h) return;
         const m = d.match(/([\d.]+)\s*(g|mL|mg)/);
         if (!m) return;
@@ -134,7 +156,8 @@ function _A(table, $) {
         else if (v === "mL") amountStr = `${m[1]}mL`;
         else amountStr = `${m[1]}g`;
         
-        const isExtract = f.includes("エキス") || f.includes("水製");
+        const isExtract = h.includes("エキス") || h.includes("水製");
+        h = h.replace(/[（(].*?[）)]/g, "").trim();
         r.push({ name: h, amount: p, amountStr, isExtract });
     });
     return r;
@@ -148,21 +171,24 @@ function Ey(n) {
         let d = s[1].replace(/^日局/, "").trim();
         d = d.replace(/^.*?((?:水製乾燥|水製|乾燥)?エキス)$/, "$1");
         if (d && !d.includes("ゼラチン")) {
+            d = d.replace(/[（(].*?[）)]/g, "").trim();
             r.push({ name: d, amount: parseFloat(s[2]), amountStr: `${s[2]}g`, isExtract: true });
         }
     }
     const o = /日局([ァ-ヶー一-龯]+(?:\d+)?(?:（[^）]*）)?)\s+(\d+\.?\d*)\s*g/g;
     let f;
     while ((f = o.exec(l)) !== null) {
-        const d = f[1].trim();
+        let d = f[1].trim();
+        d = d.replace(/[（(].*?[）)]/g, "").trim();
         r.push({ name: d, amount: parseFloat(f[2]), amountStr: `${f[2]}g`, isExtract: false });
     }
     if (r.filter(x => !x.isExtract).length === 0) {
         const d2 = /([ァ-ヶー一-龯]{2,})\s+(\d+\.?\d*)\s*g/g;
         let f2;
         while ((f2 = d2.exec(l)) !== null) {
-            const d3 = f2[1].trim();
+            let d3 = f2[1].trim();
             if (d3 !== "水製エキス" && d3 !== "乾燥エキス" && !d3.includes("ゼラチン")) {
+                d3 = d3.replace(/[（(].*?[）)]/g, "").trim();
                 r.push({ name: d3, amount: parseFloat(f2[2]), amountStr: `${f2[2]}g`, isExtract: false });
             }
         }
@@ -177,12 +203,13 @@ function zA(table, $) {
         if (/成分/.test(text) || /分量/.test(text) || /内訳/.test(text)) return;
         const tds = $(tr).find("td");
         if (tds.length === 2) {
-            const name = $(tds[0]).text().replace(/^日局/, "").trim();
+            let name = $(tds[0]).text().replace(/^日局/, "").trim();
             const amtStr = $(tds[1]).text().trim();
             const m = amtStr.match(/([\d.]+)\s*g/);
             if (name && m) {
                 const amount = parseFloat(m[1]);
                 const isExtract = name.includes("エキス") || name.includes("水製");
+                name = name.replace(/[（(].*?[）)]/g, "").trim();
                 r.push({ name, amount, amountStr: `${m[1]}g`, isExtract });
             }
         }
@@ -283,7 +310,7 @@ async function fetchDetails(url, type) {
             const w = $(x[0]).text().trim();
             const O = $(x[1]).text().trim();
             if (/エキス|[ァ-ヶ]/.test(w) && /\d+\.?\d*(g|mL|mg)/.test(O)) {
-                r.ingredients = _A(p, $); r.components = r.ingredients;
+                r.ingredients = _A(p, $);
                 return false;
             }
         }
@@ -328,8 +355,9 @@ async function main() {
             const x = a.text().trim();
             const O = $(tds[1]).text().trim();
             const C = L0(O);
-            const N = U0(x); // Keep original display name with Kanji conversion! No xA!
-            allItems.push({ name: N, rawName: x, url: w, type: "medical", otcCategory: null, subCategory: C, sortKey: N });
+            const N = U0(x); // Keep original display name with Kanji conversion!
+            const sortKey = Q0(N); // Convert Kanji to Hiragana for perfect Gojuon sorting
+            allItems.push({ name: N, rawName: x, url: w, type: "medical", otcCategory: null, subCategory: C, sortKey: sortKey });
             found++;
         });
         
@@ -358,10 +386,14 @@ async function main() {
             const x = a.text().trim();
             const O = $(tds[1]).text().trim();
             const C = L0(O);
-            const N = U0(x); // Keep original display name with Kanji conversion! No xA!
-            const matchKey = xA(x);
+            const N = U0(x); // Keep original display name with Kanji conversion!
+            const sortKey = Q0(N); // Convert Kanji to Hiragana for perfect Gojuon sorting
+            
+            // Match badge using fully converted Kanji names to absorb KEGG/Kotaro differences
+            const matchKey = U0(xA(x));
             const B = badgeMap[matchKey] || "other";
-            allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: B, subCategory: C, sortKey: N });
+            
+            allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: B, subCategory: C, sortKey: sortKey });
             found++;
         });
         
@@ -378,6 +410,15 @@ async function main() {
         try {
             const details = await fetchDetails(item.url, item.type);
             Object.assign(item, details); if (!item.efficacy) item.efficacy = " ";
+            
+            // Pre-sort ingredients by amount descending, extract first, to guarantee sorting even if frontend fails
+            item.ingredients.sort((o, f) => {
+                if (o.isExtract && !f.isExtract) return -1;
+                if (!o.isExtract && f.isExtract) return 1;
+                if (f.amount !== o.amount) return f.amount - o.amount;
+                return o.name.localeCompare(f.name, "ja");
+            });
+            item.components = item.ingredients;
         } catch (e) {
             console.error(`Failed to fetch details for ${item.url}:`, e);
         }
