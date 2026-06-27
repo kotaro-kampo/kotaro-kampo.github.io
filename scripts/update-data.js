@@ -404,10 +404,12 @@ async function main() {
             const matchKey = U0(xA(x));
             let B = badgeMap[matchKey] || "other";
             
+            if (matchKey.includes("茵陳五苓散エキス細粒g")) B = "sajikurabu";
+            if (matchKey.includes("隆持源")) B = "kyoryokukai";
+            
             allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: B, subCategory: C, sortKey: sortKey });
             
-            if (matchKey.includes("茵陳五苓散エキス細粒g")) { B = "sajikurabu"; }
-            if (matchKey === "ヨクイニンs") {
+            if (matchKey === "ヨクイニンs" || matchKey.includes("疎経活血湯エキス細粒g")) {
                 allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: "visual", subCategory: C, sortKey: sortKey });
             }
             found++;
