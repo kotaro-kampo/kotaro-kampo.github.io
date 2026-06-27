@@ -410,9 +410,9 @@ async function main() {
             allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: B, subCategory: C, sortKey: sortKey });
             
             if (matchKey === "ヨクイニンs") {
-                allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: "visual", subCategory: C, sortKey: sortKey });
+                allItems.push({ name: N + '\u200B', rawName: x + '\u200B', url: w + '&b=visual', type: "otc", otcCategory: "visual", subCategory: C, sortKey: sortKey });
             } else if (matchKey.includes("疎経活血湯エキス細粒g")) {
-                allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: "sajikurabu", subCategory: C, sortKey: sortKey });
+                allItems.push({ name: N + '\u200B', rawName: x + '\u200B', url: w + '&b=saji', type: "otc", otcCategory: "sajikurabu", subCategory: C, sortKey: sortKey });
             }
             found++;
         });
