@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kotaro-kampo-cache-v20';
+const CACHE_NAME = 'kotaro-kampo-cache-v21';
 
 // インストール時にすぐに有効化する
 self.addEventListener('install', event => {
@@ -28,8 +28,15 @@ self.addEventListener('fetch', event => {
   // URLスキームがhttp/https以外のもの（chrome-extension等）はキャッシュしない
   if (!event.request.url.startsWith('http')) return;
 
+  // HTMLやJSONファイル、またはナビゲーションリクエストの場合はブラウザのキャッシュを無視してサーバーから取得
+  let fetchOptions = {};
+  const url = new URL(event.request.url);
+  if (event.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('.json')) {
+    fetchOptions.cache = 'no-cache';
+  }
+
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, fetchOptions)
       .then(networkResponse => {
         // ネットワークから正常に取得できた場合はキャッシュを上書き更新
         if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
