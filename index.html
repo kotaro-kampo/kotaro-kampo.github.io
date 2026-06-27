@@ -72,6 +72,7 @@
       };
     </script>
   
+
 <script>
 (function() {
   let isModalOpen = false;
@@ -79,7 +80,7 @@
     const backBtn = document.querySelector('button[aria-label="戻る"]');
     if (backBtn && !isModalOpen) {
       isModalOpen = true;
-      history.pushState({ modalOpen: true }, '');
+      history.pushState({ modalOpen: true }, '', '#detail');
     } else if (!backBtn && isModalOpen) {
       isModalOpen = false;
       if (history.state && history.state.modalOpen) {
