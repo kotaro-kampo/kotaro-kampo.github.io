@@ -73,8 +73,10 @@
     </script>
   
 
+
+
 <script>
-(function() {
+document.addEventListener('DOMContentLoaded', function() {
   let isModalOpen = false;
   const observer = new MutationObserver(() => {
     const backBtn = document.querySelector('button[aria-label="戻る"]');
@@ -98,7 +100,7 @@
       }
     }
   });
-})();
+});
 </script>
 </head>
 

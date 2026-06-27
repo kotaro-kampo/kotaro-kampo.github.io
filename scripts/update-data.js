@@ -402,10 +402,11 @@ async function main() {
             
             // Match badge using fully converted Kanji names to absorb KEGG/Kotaro differences
             const matchKey = U0(xA(x));
-            const B = badgeMap[matchKey] || "other";
+            let B = badgeMap[matchKey] || "other";
             
             allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: B, subCategory: C, sortKey: sortKey });
             
+            if (matchKey.includes("茵陳五苓散エキス細粒g")) { B = "sajikurabu"; }
             if (matchKey === "ヨクイニンs") {
                 allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: "visual", subCategory: C, sortKey: sortKey });
             }
