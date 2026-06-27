@@ -409,8 +409,10 @@ async function main() {
             
             allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: B, subCategory: C, sortKey: sortKey });
             
-            if (matchKey === "ヨクイニンs" || matchKey.includes("疎経活血湯エキス細粒g")) {
+            if (matchKey === "ヨクイニンs") {
                 allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: "visual", subCategory: C, sortKey: sortKey });
+            } else if (matchKey.includes("疎経活血湯エキス細粒g")) {
+                allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: "sajikurabu", subCategory: C, sortKey: sortKey });
             }
             found++;
         });
