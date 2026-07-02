@@ -368,7 +368,8 @@ async function main() {
             const C = L0(O);
             const N = U0(x); // Keep original display name with Kanji conversion!
             const sortKey = Q0(N); // Convert Kanji to Hiragana for perfect Gojuon sorting
-            allItems.push({ name: N, rawName: x, url: w, type: "medical", otcCategory: null, subCategory: C, sortKey: sortKey });
+            const subCategorySortKey = Q0(C);
+            allItems.push({ name: N, rawName: x, url: w, type: "medical", otcCategory: null, subCategory: C, sortKey: sortKey, subCategorySortKey: subCategorySortKey });
             found++;
         });
         
@@ -399,20 +400,21 @@ async function main() {
             const C = L0(O);
             const N = U0(x); // Keep original display name with Kanji conversion!
             const sortKey = Q0(N); // Convert Kanji to Hiragana for perfect Gojuon sorting
+            const subCategorySortKey = Q0(C);
             
             // Match badge using fully converted Kanji names to absorb KEGG/Kotaro differences
             const matchKey = U0(xA(x));
             let B = badgeMap[matchKey] || "other";
             
-            if (matchKey.includes("茵陳五苓散エキス細粒g")) B = "sajikurabu";
+            if (matchKey.includes("茵陳五苓散")) B = "sajikurabu";
             if (matchKey.includes("隆持源")) B = "kyoryokukai";
             
-            allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: B, subCategory: C, sortKey: sortKey });
+            allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: B, subCategory: C, sortKey: sortKey, subCategorySortKey: subCategorySortKey });
             
             if (matchKey === "ヨクイニンs") {
-                allItems.push({ name: N + '\u200B', rawName: x + '\u200B', url: w + '&b=visual', type: "otc", otcCategory: "visual", subCategory: C, sortKey: sortKey });
-            } else if (matchKey.includes("疎経活血湯エキス細粒g")) {
-                allItems.push({ name: N + '\u200B', rawName: x + '\u200B', url: w + '&b=saji', type: "otc", otcCategory: "sajikurabu", subCategory: C, sortKey: sortKey });
+                allItems.push({ name: N + '\u200B', rawName: x + '\u200B', url: w + '&b=visual', type: "otc", otcCategory: "visual", subCategory: C, sortKey: sortKey, subCategorySortKey: subCategorySortKey });
+            } else if (matchKey.includes("疎経活血湯")) {
+                allItems.push({ name: N + '\u200B', rawName: x + '\u200B', url: w + '&b=saji', type: "otc", otcCategory: "sajikurabu", subCategory: C, sortKey: sortKey, subCategorySortKey: subCategorySortKey });
             }
             found++;
         });

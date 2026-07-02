@@ -1,26 +1,7 @@
-const CACHE_NAME = 'kotaro-kampo-cache-v25';
+const fs = require('fs');
+let sw = fs.readFileSync('service-worker.js', 'utf8');
 
-// インストール時にすぐに有効化する
-self.addEventListener('install', event => {
-  self.skipWaiting();
-});
-
-// 古いキャッシュのクリーンアップ
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.filter(cacheName => {
-          return cacheName.startsWith('kotaro-kampo-cache-') && cacheName !== CACHE_NAME;
-        }).map(cacheName => {
-          return caches.delete(cacheName);
-        })
-      );
-    }).then(() => self.clients.claim())
-  );
-});
-
-// Network First, falling back to cache
+const newFetchLogic = `// Network First, falling back to cache
 self.addEventListener('fetch', event => {
   // GETリクエストのみ対象とする
   if (event.request.method !== 'GET') return;
@@ -58,4 +39,10 @@ self.addEventListener('fetch', event => {
         throw new Error('Network request failed and no cache available');
       })
   );
-});
+});`;
+
+sw = sw.replace(/\/\/ Network First, falling back to cache[\s\S]*\}\);\n$/, newFetchLogic + '\n');
+sw = sw.replace(/kotaro-kampo-cache-v\d+/, 'kotaro-kampo-cache-v21');
+
+fs.writeFileSync('service-worker.js', sw);
+console.log('Patched service-worker.js');
