@@ -408,6 +408,8 @@ async function main() {
             
             if (matchKey.includes("茵陳五苓散")) B = "sajikurabu";
             if (matchKey.includes("隆持源")) B = "kyoryokukai";
+            if (matchKey.includes("ネオカキックス")) B = "visual";
+            if (matchKey.includes("虔修六神丸")) B = "visual";
             
             allItems.push({ name: N, rawName: x, url: w, type: "otc", otcCategory: B, subCategory: C, sortKey: sortKey, subCategorySortKey: subCategorySortKey });
             
