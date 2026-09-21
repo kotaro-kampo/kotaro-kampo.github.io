@@ -27716,8 +27716,25 @@ function XA({ drug: n, onBack: r, isBookmarked: l, onToggleBookmark: s }) {
                       children: o.usage,
                     }),
                   }),
-                o.precautions &&
-                  S.jsx(Ra, {
+                o.precautions && (o.type === 'medical' && o.precautions.includes('【') ? 
+                  o.precautions.split(/(?=【)/).filter(Boolean).map((chunk, idx) => {
+                      const m = chunk.match(/【(.*?)】\n([\s\S]*)/);
+                      if (m) {
+                          return S.jsx(Ra, {
+                              key: idx,
+                              title: m[1].trim(),
+                              defaultOpen: !1,
+                              children: S.jsx("p", {
+                                  className: "whitespace-pre-wrap text-sm",
+                                  children: m[2].trim(),
+                              }),
+                          });
+                      }
+                      return null;
+                  })
+                  :
+                  
+S.jsx(Ra, {
                     "data-loc": "client/src/components/DrugDetail.tsx:221",
                     title: "使用上の注意",
                     defaultOpen: !1,
@@ -27726,7 +27743,8 @@ function XA({ drug: n, onBack: r, isBookmarked: l, onToggleBookmark: s }) {
                       className: "whitespace-pre-wrap text-sm",
                       children: o.precautions,
                     }),
-                  }),
+                  })
+),
                 o.usageNotes &&
                   S.jsx(Ra, {
                     "data-loc": "client/src/components/DrugDetail.tsx:228",
