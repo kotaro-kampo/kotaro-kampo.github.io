@@ -243,7 +243,10 @@ async function fetchDetails(url, type) {
                 r.usage = p;
                 const v = p.match(/1日\s*([\d.]+\s*g)/);
                 if (v && !r.dailyDose) r.dailyDose = v[1];
-            } else if (/使用上の注意|重要な基本的注意/.test(m) && !r.precautions) r.precautions = p;
+            } else if (/禁忌|使用上の注意|重要な基本的注意|特定の背景を有する患者に関する注意|相互作用|副作用|その他の注意/.test(m)) {
+                const title = m.replace(/^\d+\.?\s*/, '').trim();
+                r.precautions = r.precautions ? r.precautions + '\n\n【' + title + '】\n' + p : '【' + title + '】\n' + p;
+            }
             else if (/用法に関する注意/.test(m) && !r.usageNotes) r.usageNotes = p;
         });
         
