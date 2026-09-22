@@ -7504,7 +7504,7 @@ Error generating stack: ` +
       ["xHeight", "x-height"],
     ]),
     ib =
-      /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i;
+      /^[\u0000-\u001F ]*j[\n\t]*a[\n\t]*v[\n\t]*a[\n\t]*s[\n\t]*c[\n\t]*r[\n\t]*i[\n\t]*p[\n\t]*t[\n\t]*:/i;
   function Vl(e) {
     return ib.test("" + e)
       ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
@@ -15547,7 +15547,7 @@ Error generating stack: ` +
     }
     g.length !== 0 && e.push({ event: t, listeners: g });
   }
-  var Tx = /\r\n?/g,
+  var Tx = /\n?/g,
     zx = /\u0000|\uFFFD/g;
   function Np(e) {
     return (typeof e == "string" ? e : "" + e)
@@ -27268,26 +27268,35 @@ function QA(n, r, l, s, o, f, d, excIng) {
   );
 }
 function GA() {
-  const [n, r] = E.useState(() => {
-      try {
-        const o = localStorage.getItem(Oy);
-        return o ? new Set(JSON.parse(o)) : new Set();
-      } catch {
-        return new Set();
-      }
-    }),
-    l = E.useCallback((o) => {
-      r((f) => {
-        const d = new Set(f);
-        d.has(o) ? d.delete(o) : d.add(o);
-        try {
-          localStorage.setItem(Oy, JSON.stringify(Array.from(d)));
-        } catch {}
-        return d;
-      });
-    }, []),
-    s = E.useCallback((o) => n.has(o), [n]);
-  return { bookmarks: n, toggleBookmark: l, isBookmarked: s };
+  const initSet = (key) => {
+    try {
+      const v = localStorage.getItem(key);
+      return v ? new Set(JSON.parse(v)) : new Set();
+    } catch {
+      return new Set();
+    }
+  };
+  const [b1, setB1] = E.useState(() => initSet(Oy));
+  const [b2, setB2] = E.useState(() => initSet(Oy + "_2"));
+  const tog1 = E.useCallback((o) => {
+    setB1((f) => {
+      const d = new Set(f);
+      d.has(o) ? d.delete(o) : d.add(o);
+      try { localStorage.setItem(Oy, JSON.stringify(Array.from(d))); } catch {}
+      return d;
+    });
+  }, []);
+  const tog2 = E.useCallback((o) => {
+    setB2((f) => {
+      const d = new Set(f);
+      d.has(o) ? d.delete(o) : d.add(o);
+      try { localStorage.setItem(Oy + "_2", JSON.stringify(Array.from(d))); } catch {}
+      return d;
+    });
+  }, []);
+  const is1 = E.useCallback((o) => b1.has(o), [b1]);
+  const is2 = E.useCallback((o) => b2.has(o), [b2]);
+  return { b1, b2, tog1, tog2, is1, is2 };
 }
 function mr(n, r) {
   const [l, s] = E.useState(null),
@@ -27534,21 +27543,24 @@ function XA({ drug: n, onBack: r, isBookmarked: l, onToggleBookmark: s }) {
                 }),
               ],
             }),
-            S.jsx("button", {
-              "data-loc": "client/src/components/DrugDetail.tsx:98",
-              onClick: s,
-              className: `p-1 flex-shrink-0 mt-0.5 transition-colors ${l ? "text-yellow-300" : "text-white/50 hover:text-yellow-300"}`,
-              "aria-label": l ? "ブックマークを解除" : "ブックマークに追加",
-              children: l
-                ? S.jsx($f, {
-                    "data-loc": "client/src/components/DrugDetail.tsx:105",
-                    size: 20,
-                  })
-                : S.jsx(ho, {
-                    "data-loc": "client/src/components/DrugDetail.tsx:105",
-                    size: 20,
-                  }),
-            }),
+            (() => {
+  const { is1, is2, tog1, tog2 } = GA();
+  return S.jsxs("div", {
+    className: "flex flex-row items-center gap-3 pr-2 mt-0.5",
+    children: [
+      S.jsx("button", {
+        onClick: () => tog1(n.url),
+        className: `p-1 transition-colors ${is1(n.url) ? "text-yellow-400" : "text-white/50 hover:text-yellow-300"}`,
+        children: is1(n.url) ? S.jsx($f, {size: 20}) : S.jsx(ho, {size: 20})
+      }),
+      S.jsx("button", {
+        onClick: () => tog2(n.url),
+        className: `p-1 transition-colors ${is2(n.url) ? "text-blue-400" : "text-white/50 hover:text-blue-300"}`,
+        children: is2(n.url) ? S.jsx($f, {size: 20}) : S.jsx(ho, {size: 20})
+      })
+    ]
+  });
+})(),
           ],
         }),
       }),
@@ -28215,7 +28227,7 @@ function WA() {
     [l, s] = E.useState("name"),
     [o, f] = E.useState([]),
     [d, h] = E.useState(null),
-    [m, p] = E.useState(!1),
+    [m, p] = E.useState(0),
     [v, y] = E.useState(!1),
     [x, w] = E.useState([]),
     [O, C] = E.useState(!1),
@@ -28248,9 +28260,9 @@ function WA() {
       retryInitial: ee,
       newDrugsAdded: ne,
     } = BA(),
-    { bookmarks: I, toggleBookmark: re, isBookmarked: ie } = GA(),
+    { b1: I1, b2: I2, tog1: re1, tog2: re2, is1: ie1, is2: ie2 } = GA(),
     { fetchedCount: ce, isComplete: j } = KA($),
-    U = QA($, n, l, o, m, I, ce, excIng),
+    U = QA($, n, l, o, m, m === 2 ? I2 : I1, ce, excIng),
     R = (() => {
       const le = new Set();
       return ($.forEach((Ee) => le.add(Ee.name)), le.size);
@@ -28480,12 +28492,12 @@ function WA() {
                     S.jsxs("button", {
                       "data-loc": "client/src/pages/Home.tsx:350",
                       onClick: () => {
-                        (p((le) => !le), f([]));
+                        (p((le) => (le + 1) % 3), f([]));
                       },
-                      className: `flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-full transition-colors ${m ? "bg-yellow-400 text-yellow-900 font-semibold" : "bg-white/15 text-white/80 hover:bg-white/25"}`,
+                      className: `flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-full transition-colors ${m === 1 ? "bg-yellow-400 text-yellow-900 font-semibold" : m === 2 ? "bg-blue-400 text-blue-900 font-semibold" : "bg-white/15 text-white/80 hover:bg-white/25"}`,
                       title: "ブックマーク一覧",
                       children: [
-                        m
+                        (m === 1 || m === 2)
                           ? S.jsx($f, {
                               "data-loc": "client/src/pages/Home.tsx:362",
                               size: 14,
@@ -28989,26 +29001,21 @@ function WA() {
                                 }),
                               ],
                             }),
-                            !v &&
-                              S.jsx("button", {
-                                "data-loc": "client/src/pages/Home.tsx:658",
-                                onClick: () => re(le.url),
-                                className: `px-3 flex items-center justify-center transition-colors ${Ve ? "text-yellow-500 hover:text-yellow-600" : "text-muted-foreground/40 hover:text-yellow-400"}`,
-                                "aria-label": Ve
-                                  ? "ブックマークを解除"
-                                  : "ブックマークに追加",
-                                children: Ve
-                                  ? S.jsx($f, {
-                                      "data-loc":
-                                        "client/src/pages/Home.tsx:667",
-                                      size: 18,
-                                    })
-                                  : S.jsx(ho, {
-                                      "data-loc":
-                                        "client/src/pages/Home.tsx:667",
-                                      size: 18,
-                                    }),
-                              }),
+                            !v && S.jsxs("div", {
+  className: "flex flex-col justify-center gap-2 px-2 border-l border-border",
+  children: [
+    S.jsx("button", {
+      onClick: () => re1(le.url),
+      className: `transition-colors ${ie1(le.url) ? "text-yellow-500 hover:text-yellow-600" : "text-muted-foreground/40 hover:text-yellow-400"}`,
+      children: ie1(le.url) ? S.jsx($f, {size: 18}) : S.jsx(ho, {size: 18})
+    }),
+    S.jsx("button", {
+      onClick: () => re2(le.url),
+      className: `transition-colors ${ie2(le.url) ? "text-blue-500 hover:text-blue-600" : "text-muted-foreground/40 hover:text-blue-400"}`,
+      children: ie2(le.url) ? S.jsx($f, {size: 18}) : S.jsx(ho, {size: 18})
+    })
+  ]
+}),
                           ],
                         }),
                       },
