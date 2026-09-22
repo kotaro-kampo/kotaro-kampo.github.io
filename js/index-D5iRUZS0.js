@@ -27437,7 +27437,7 @@ function Ra({ title: n, children: r, defaultOpen: l = !0, className: s = "" }) {
     ],
   });
 }
-function XA({ drug: n, onBack: r, isBookmarked: l, onToggleBookmark: s }) {
+function XA({ drug: n, onBack: r, is1, is2, tog1, tog2 }) {
   const { detail: o, loading: f, error: d } = mr(n.url, n.type),
     [h, m] = E.useState("kana"),
     p = o?.ingredients
@@ -27543,9 +27543,7 @@ function XA({ drug: n, onBack: r, isBookmarked: l, onToggleBookmark: s }) {
                 }),
               ],
             }),
-            (() => {
-  const { is1, is2, tog1, tog2 } = GA();
-  return S.jsxs("div", {
+            S.jsxs("div", {
     className: "flex flex-row items-center gap-3 pr-2 mt-0.5",
     children: [
       S.jsx("button", {
@@ -27559,8 +27557,7 @@ function XA({ drug: n, onBack: r, isBookmarked: l, onToggleBookmark: s }) {
         children: is2(n.url) ? S.jsx($f, {size: 20}) : S.jsx(ho, {size: 20})
       })
     ]
-  });
-})(),
+  }),
           ],
         }),
       }),
@@ -28385,8 +28382,10 @@ function WA() {
         "data-loc": "client/src/pages/Home.tsx:289",
         drug: d,
         onBack: Y,
-        isBookmarked: !1,
-        onToggleBookmark: () => {},
+        is1: ie1,
+        is2: ie2,
+        tog1: re1,
+        tog2: re2,
       }),
     });
   const Lt = o.length > 0 || m > 0,
