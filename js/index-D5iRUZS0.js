@@ -28385,8 +28385,8 @@ function WA() {
         "data-loc": "client/src/pages/Home.tsx:289",
         drug: d,
         onBack: Y,
-        isBookmarked: ie(d.url),
-        onToggleBookmark: () => re(d.url),
+        isBookmarked: !1,
+        onToggleBookmark: () => {},
       }),
     });
   const Lt = o.length > 0 || m,
@@ -28893,7 +28893,7 @@ function WA() {
                   ref: G,
                   className: "divide-y divide-border",
                   children: U.map((le, Ee) => {
-                    const Ve = ie(le.url),
+                    const Ve = !1,
                       He = x.some((Ga) => Ga.url === le.url),
                       It = x.length >= Sf && !He;
                     return S.jsx(
