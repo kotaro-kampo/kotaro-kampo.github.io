@@ -28508,7 +28508,7 @@ function WA() {
                             }),
                         S.jsx("span", {
                           "data-loc": "client/src/pages/Home.tsx:363",
-                          children: I.size,
+                          children: (m === 1 ? I1.size : m === 2 ? I2.size : I1.size + I2.size),
                         }),
                       ],
                     }),
