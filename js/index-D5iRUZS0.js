@@ -27548,7 +27548,7 @@ function XA({ drug: n, onBack: r, is1, is2, tog1, tog2 }) {
     children: [
       S.jsx("button", {
         onClick: () => tog1(n.url),
-        className: `p-1 transition-colors ${is1(n.url) ? "text-yellow-400" : "text-white/50 hover:text-yellow-300"}`,
+        className: `p-1 transition-colors ${is1(n.url) ? "text-yellow-300" : "text-white/50 hover:text-yellow-300"}`,
         children: is1(n.url) ? S.jsx($f, {size: 20}) : S.jsx(ho, {size: 20})
       }),
       S.jsx("button", {
