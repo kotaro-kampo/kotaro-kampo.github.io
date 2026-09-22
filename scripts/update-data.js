@@ -122,14 +122,22 @@ function Q0(n) {
     return l.replace(/[ァ-ン]/g, o => String.fromCharCode(o.charCodeAt(0) - 96)).toLowerCase();
 }
 
+function extractTextWithNewlines($, el) {
+    const clone = $(el).clone();
+    clone.find('br').replaceWith('\n');
+    clone.find('tr, p, div, li, h1, h2, h3, h4, h5').each((_, block) => { $(block).prepend('\n'); });
+    clone.find('td, th').each((_, cell) => { $(cell).append(' \n'); });
+    return clone.text().replace(/\n\s*\n+/g, '\n\n').trim();
+}
+
 function Y0(el, $) {
     let text = "";
     let curr = $(el).next();
     while (curr.length && !curr.is("h1, h2, h3, h4")) {
-        text += curr.text() + "\n";
+        text += extractTextWithNewlines($, curr) + "\n\n";
         curr = curr.next();
     }
-    return text.trim();
+    return text.replace(/\n{3,}/g, '\n\n').trim();
 }
 
 function V0(el, $) {
