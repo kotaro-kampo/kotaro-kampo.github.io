@@ -28389,7 +28389,7 @@ function WA() {
         onToggleBookmark: () => {},
       }),
     });
-  const Lt = o.length > 0 || m,
+  const Lt = o.length > 0 || m > 0,
     ra = J || te;
   return S.jsxs("div", {
     "data-loc": "client/src/pages/Home.tsx:303",
@@ -28508,7 +28508,7 @@ function WA() {
                             }),
                         S.jsx("span", {
                           "data-loc": "client/src/pages/Home.tsx:363",
-                          children: (m === 1 ? I1.size : m === 2 ? I2.size : I1.size + I2.size),
+                          children: (m === 1 ? I1.size : m === 2 ? I2.size : new Set([...I1, ...I2]).size),
                         }),
                       ],
                     }),
