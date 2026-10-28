@@ -177,8 +177,9 @@ function _A(table, $) {
 
 function Ey(n) {
     const r = [];
-    let l = n.replace(/\n/g, " ").replace(/\r/g, "").replace(/\s+/g, " ").trim();
-    const s = l.match(/((?:水製乾燥|水製|乾燥)エキス)\s*(\d+\.?\d*)\s*g/) || l.match(/([^　\s,、。]*エキス)\s*(\d+\.?\d*)\s*g/);
+    if (!n) return r;
+
+    const s = n.match(/((?:水製乾燥|水製|乾燥)エキス)\s*(\d+\.?\d*)\s*g/) || n.match(/([^　\s,、。]*エキス)\s*(\d+\.?\d*)\s*g/);
     if (s) {
         let d = s[1].replace(/^日局/, "").trim();
         d = d.replace(/^.*?((?:水製乾燥|水製|乾燥)?エキス)$/, "$1");
@@ -187,27 +188,36 @@ function Ey(n) {
             r.push({ name: d, amount: parseFloat(s[2]), amountStr: `${s[2]}g`, isExtract: true });
         }
     }
-    const o = /日局([ァ-ヶー一-龯]+(?:\d+)?(?:（[^）]*）)?)\s+(\d+\.?\d*)\s*g/g;
-    let f;
-    while ((f = o.exec(l)) !== null) {
-        let d = f[1].trim();
-        d = d.replace(/[（(].*/g, "").trim();
-        r.push({ name: d, amount: parseFloat(f[2]), amountStr: `${f[2]}g`, isExtract: false });
-    }
-    if (r.filter(x => !x.isExtract).length === 0) {
-        const d2 = /([ァ-ヶー一-龯]{2,})\s+(\d+\.?\d*)\s*g/g;
-        let f2;
-        while ((f2 = d2.exec(l)) !== null) {
-            let d3 = f2[1].trim();
-            if (d3 !== "水製エキス" && d3 !== "乾燥エキス" && !d3.includes("ゼラチン")) {
-                d3 = d3.replace(/[（(].*/g, "").trim();
-                r.push({ name: d3, amount: parseFloat(f2[2]), amountStr: `${f2[2]}g`, isExtract: false });
+
+    const lines = n.split(/\r?\n/);
+    for (let rawLine of lines) {
+        let line = rawLine.trim();
+        if (!line) continue;
+        if (line.includes("本剤") || line.includes("中") || line.includes("上記") || line.includes("エキス") || line.includes("含有") || line.includes("添加")) {
+            continue;
+        }
+
+        const m = line.match(/(?:日局\s*|局\s*)?([ァ-ヶー一-龯]+(?:\d+)?(?:（[^）]*）)?)\s*[:：]?\s*(\d+(?:\.\d+)?)\s*g/);
+        if (m) {
+            let name = m[1].replace(/[（(].*/g, "").trim();
+            name = name.replace(/^日局\s*/, "").trim();
+            
+            if (name && name !== "水製エキス" && name !== "乾燥エキス" && !name.includes("ゼラチン")) {
+                const amt = parseFloat(m[2]);
+                if (!isNaN(amt) && amt > 0 && !r.some(x => x.name === name)) {
+                    r.push({
+                        name: name,
+                        amount: amt,
+                        amountStr: `${m[2]}g`,
+                        isExtract: false
+                    });
+                }
             }
         }
     }
+
     return r;
 }
-
 function zA(table, $) {
     const r = [];
     $(table).find("tr").each((_, tr) => {
@@ -276,7 +286,7 @@ async function fetchDetails(url, type) {
                             if (ht.length) {
                                 r.ingredients = zA(ht, $2);
                             } else {
-                                r.ingredients = Ey(f.text() || "");
+                                r.ingredients = Ey(extractTextWithNewlines($2, f));
                             }
                         } else if (o === "添加剤" || o === "添加物") {
                             r.additives = V0(f, $2);
@@ -290,7 +300,7 @@ async function fetchDetails(url, type) {
                             const th = $2(tr).find("th").text().trim();
                             const td = $2(tr).find("td");
                             if (th === "有効成分") {
-                                r.ingredients = Ey(td.text() || "");
+                                r.ingredients = Ey(extractTextWithNewlines($2, td));
                             }
                         });
                     });
