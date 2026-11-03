@@ -28264,6 +28264,18 @@ function WA() {
       const le = new Set();
       return ($.forEach((Ee) => le.add(Ee.name)), le.size);
     })();
+  E.useEffect(() => {
+    if ($.length > 0 && !d) {
+      const params = new URLSearchParams(window.location.search);
+      const detailParam = params.get("detail");
+      if (detailParam) {
+        const found = $.find(item => item.url === detailParam || item.name === detailParam);
+        if (found) {
+          h(found);
+        }
+      }
+    }
+  }, [$]);
   E.useCallback(async () => {
     const le = fr.loading("データを更新中...", { duration: 1 / 0 });
     (await F(), fr.dismiss(le), setTimeout(() => {}, 100));
@@ -28415,7 +28427,9 @@ function WA() {
                   size: 20,
                   className: "text-white/80",
                 }),
-                S.jsxs("div", {
+                S.jsxs("a", {
+                  href: "quiz.html",
+                  style: { textDecoration: "none" },
                   "data-loc": "client/src/pages/Home.tsx:313",
                   children: [
                     S.jsx("h1", {
@@ -29144,6 +29158,10 @@ function e_() {
       S.jsx(gf, {
         "data-loc": "client/src/App.tsx:18",
         path: "/",
+        component: WA,
+      }),
+      S.jsx(gf, {
+        path: "/index.html",
         component: WA,
       }),
       S.jsx(gf, {

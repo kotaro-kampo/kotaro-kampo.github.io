@@ -39,7 +39,33 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="小太郎漢方">
-    <script type="module" crossorigin="" src="js/index-D5iRUZS0.js?v=9"></script>
+    <script>
+// クイズや外部リンクからの ?detail= 指定を監視して該当カードを自動クリック
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const targetDetail = params.get('detail');
+  if (!targetDetail) return;
+
+  let attempts = 0;
+  const interval = setInterval(() => {
+    attempts++;
+    const cards = document.querySelectorAll('h3, div.cursor-pointer, div.rounded-2xl');
+    for (let el of cards) {
+      if (el.textContent && el.textContent.trim().startsWith(targetDetail)) {
+        // カード要素（親をクリック）
+        const clickable = el.closest('div.cursor-pointer') || el.closest('div.rounded-2xl') || el;
+        clickable.click();
+        clearInterval(interval);
+        return;
+      }
+    }
+    if (attempts > 50) {
+      clearInterval(interval);
+    }
+  }, 100);
+});
+</script>
+<script type="module" crossorigin="" src="js/index-D5iRUZS0.js?v=10"></script>
     <link rel="stylesheet" crossorigin="" href="css/index-BjDnIrd6.css">
   <meta property="og:type" content="website">
 		<meta property="og:url" content="https://kampo-kotaro.manus.space/">

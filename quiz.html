@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小太郎漢方製薬 漢方知識テスト</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    /* 検索サイト本体と完全に一致する幅・ヘッダー・コンテナスタイル */
+    .app-container {
+      max-width: 680px;
+      min-height: 100dvh;
+      margin: 0 auto;
+      position: relative;
+    }
+    .app-header {
+      background: linear-gradient(135deg, #003e20, #004d29, #185b37);
+    }
+    .herb-chip {
+      transition: all 0.15s ease-in-out;
+      user-select: none;
+    }
+    .herb-chip:active { transform: scale(0.95); }
+    .correct-anim { animation: pulseGreen 0.5s ease-in-out; }
+    .wrong-anim { animation: shakeRed 0.4s ease-in-out; }
+    @keyframes pulseGreen {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shakeRed {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .custom-scroll::-webkit-scrollbar { width: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-[#f8f8f7] text-slate-800 min-h-screen">
+
+  <!-- 全体を包むコンテナ（検索サイトの .app-container と同一幅 680px） -->
+  <div class="app-container flex flex-col bg-white shadow-xs">
+
+    <!-- ヘッダー（検索サイトと完全に同一の幅・色・パディング） -->
+    <header class="app-header text-white sticky top-0 z-20">
+      <div class="px-4 pt-4 pb-3 flex items-center justify-between">
+        <!-- 左上タイトル（クリックで検索サイトへ移動） -->
+        <a href="index.html" class="flex items-center space-x-2.5 text-white no-underline hover:opacity-90 transition">
+          <!-- テスト用アイコン（クリップボード・チェックシート） -->
+          <i class="fa-solid fa-clipboard-check text-xl text-white/85"></i>
+          <div>
+            <div class="font-bold text-base leading-tight">小太郎漢方製薬</div>
+            <div class="text-white/70 text-xs">漢方知識テスト</div>
+          </div>
+        </a>
+        <!-- 設定ボタン -->
+        <button id="btnSettings" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full flex items-center space-x-1.5 border border-white/20 transition">
+          <i class="fa-solid fa-sliders"></i>
+          <span>設定・絞込</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="flex-1 w-full p-4 flex flex-col">
+
+      <!-- 設定・絞り込みモーダル -->
+      <div id="settingsPanel" class="bg-white rounded-3xl shadow-xl border border-slate-200 p-5 mb-4 hidden">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <h2 class="font-bold text-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-[#185b37]"></i> 出題設定と範囲絞込
+          </h2>
+          <button id="btnCloseSettings" class="text-slate-400 hover:text-slate-600 p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <!-- 出題モード -->
+        <div class="mb-4">
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">出題モード</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" class="mode-select-btn px-4 py-2.5 rounded-2xl border-2 font-medium text-sm flex items-center justify-center gap-2 transition" data-mode="prescToHerb">
+              <i class="fa-solid fa-book-medical"></i> 処方名 ⇒ 生薬
+            </button>
+            <button type="button" class="mode-select-btn px-4 py-2.5 rounded-2xl border-2 font-medium text-sm flex items-center justify-center gap-2 transition" data-mode="herbToPresc">
+              <i class="fa-solid fa-seedling"></i> 生薬 ⇒ 処方名
+            </button>
+          </div>
+        </div>
+
+        <!-- カテゴリ絞り込み -->
+        <div class="mb-5">
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">出題カテゴリ（複数選択可・自動保存）</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-sm">
+              <input type="checkbox" id="catMedical" class="rounded text-[#185b37] focus:ring-[#185b37] h-4 w-4">
+              <span class="font-medium text-slate-700">医療用</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-sm">
+              <input type="checkbox" id="catSaji" class="rounded text-[#185b37] focus:ring-[#185b37] h-4 w-4">
+              <span class="font-medium text-slate-700">匙倶楽部</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-sm">
+              <input type="checkbox" id="catKyoryoku" class="rounded text-[#185b37] focus:ring-[#185b37] h-4 w-4">
+              <span class="font-medium text-slate-700">協力会</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 習得状況・完璧一覧ボタン -->
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 mb-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-graduation-cap text-amber-500"></i>
+                <span>習得状況・完璧判定一覧</span>
+              </div>
+              <div class="text-xs text-slate-500 mt-0.5">
+                10回連続正解で「完璧（卒業）」判定になります
+              </div>
+            </div>
+            <button id="btnOpenMasteryModal" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs shadow-sm transition flex items-center gap-1">
+              <i class="fa-solid fa-list-check"></i>
+              <span>一覧を確認</span>
+            </button>
+          </div>
+          <!-- 簡易プログレスバー -->
+          <div class="mt-3">
+            <div class="flex justify-between text-xs text-slate-500 mb-1">
+              <span>現在のモードの卒業率: <strong id="masteryRateText" class="text-[#185b37] font-bold">0%</strong></span>
+              <span><strong id="masteredCountText" class="text-amber-600 font-bold">0</strong> / <span id="totalEligibleText">0</span> 処方完璧</span>
+            </div>
+            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden flex">
+              <div id="masteryProgressBar" class="bg-amber-500 h-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <button id="btnApplySettings" class="bg-[#185b37] hover:bg-[#004d29] text-white font-bold px-5 py-2.5 rounded-xl text-sm shadow transition">
+            この条件で再スタート
+          </button>
+        </div>
+      </div>
+
+      <!-- ステータスバー -->
+      <div class="flex items-center justify-between text-xs text-slate-500 mb-3 px-1">
+        <div class="flex items-center gap-2">
+          <span class="bg-[#185b37]/10 text-[#003e20] font-bold px-2 py-0.5 rounded-md" id="badgeMode">処方名 ⇒ 生薬</span>
+          <span id="txtFilterSummary" class="text-slate-400">医療用 / 匙 / 協力会</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span>正答数: <strong id="scoreCount" class="text-[#185b37] font-bold text-sm">0</strong></span>
+          <span>出題: <strong id="totalCount" class="font-bold text-sm">0</strong>問目</span>
+        </div>
+      </div>
+
+      <!-- クイズカード -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 flex-1 flex flex-col justify-between">
+
+        <!-- 問題文エリア -->
+        <div id="questionArea" class="mb-5">
+          <div class="flex items-center justify-between mb-1">
+            <div class="text-xs font-bold text-[#185b37] tracking-wider uppercase" id="qSubTitle">QUESTION</div>
+            <div id="streakBadge" class="hidden text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+              <i class="fa-solid fa-fire text-amber-500"></i>
+              <span id="streakBadgeText">3連続正解中</span>
+            </div>
+          </div>
+          <h2 class="text-2xl font-black text-slate-800 tracking-tight" id="qTitle">読み込み中...</h2>
+          <div id="qDescription" class="text-xs text-slate-400 mt-1"></div>
+        </div>
+
+        <!-- 回答エリア -->
+        <div id="answersContainer" class="flex-1 flex flex-col justify-center">
+          <!-- JSで動的生成 -->
+        </div>
+
+        <!-- 判定・解説エリア -->
+        <div id="explanationArea" class="mt-5 pt-4 border-t border-slate-100 hidden">
+          <div id="resultBanner" class="p-3.5 rounded-2xl flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2.5">
+              <span id="resultIcon" class="text-2xl"></span>
+              <div>
+                <div id="resultStatus" class="font-black text-base"></div>
+                <div id="resultDetail" class="text-xs opacity-90"></div>
+              </div>
+            </div>
+            <button id="btnNextQuestion" class="bg-slate-900 text-white hover:bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
+              <span>次へ</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+
+          <!-- 正解生薬リスト & 効能効果 -->
+          <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs mb-3">
+            <div class="font-bold text-slate-600 mb-1.5 flex items-center gap-1.5">
+              <i class="fa-solid fa-list-check text-[#185b37]"></i> 正解の構成生薬
+            </div>
+            <div id="correctHerbList" class="flex flex-wrap gap-1.5">
+              <!-- JSで動的生成 -->
+            </div>
+            <div id="correctEfficacyBox" class="mt-2.5 pt-2.5 border-t border-slate-200/60 hidden">
+              <div class="font-bold text-slate-600 mb-1 flex items-center gap-1.5">
+                <i class="fa-solid fa-notes-medical text-[#185b37]"></i> 効能・効果
+              </div>
+              <div id="correctEfficacyText" class="text-xs text-slate-700 leading-relaxed max-h-36 overflow-y-auto custom-scroll"></div>
+            </div>
+          </div>
+
+          <!-- 詳細確認ボタン（同一画面モーダル起動） -->
+          <div class="pt-1">
+            <button id="btnOpenDetailModal" type="button" class="w-full bg-[#185b37] hover:bg-[#004d29] text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99]">
+              <i class="fa-solid fa-file-waveform text-sm"></i>
+              <span id="btnOpenDetailModalText">「処方名」の添付文書・詳細を確認</span>
+              <i class="fa-solid fa-chevron-right text-[10px] opacity-75"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- 習得状況・完璧一覧モーダル -->
+  <div id="masteryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-xl max-h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fade-in">
+      
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">習得状況・完璧判定一覧</h3>
+            <p class="text-xs text-slate-500">10回連続正解で出題完了（完璧判定）となります</p>
+          </div>
+        </div>
+        <button id="btnCloseMasteryModal" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="px-5 pt-3 border-b border-slate-100 flex gap-4 text-xs font-bold">
+        <button id="tabPrescToHerb" class="pb-2.5 border-b-2 border-[#185b37] text-[#003e20] transition">
+          処方名 ⇒ 生薬 (<span id="modalPrescCount">0</span>)
+        </button>
+        <button id="tabHerbToPresc" class="pb-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">
+          生薬 ⇒ 処方名 (<span id="modalHerbCount">0</span>)
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-5 custom-scroll space-y-4" id="masteryListContent">
+        <!-- JSで動的生成 -->
+      </div>
+
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs">
+        <button id="btnResetAllStats" class="text-rose-500 hover:text-rose-700 hover:underline">
+          <i class="fa-solid fa-trash-can mr-1"></i> 進捗データを初期化
+        </button>
+        <button id="btnCloseMasteryModalFooter" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-xl">
+          閉じる
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 商品詳細モーダル（スマホ対応・同一画面表示） -->
+  <div id="drugDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white w-full max-w-xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fade-in">
+      
+      <!-- モーダルヘッダー -->
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+        <div class="flex items-center gap-2.5 min-w-0 pr-2">
+          <div class="w-9 h-9 rounded-2xl bg-emerald-100 text-[#185b37] flex-shrink-0 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-file-waveform"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <h3 class="font-black text-slate-800 text-base truncate" id="detailModalTitle">処方名</h3>
+              <span id="detailModalBadge"></span>
+            </div>
+            <p class="text-[11px] text-slate-400 truncate" id="detailModalSub">添付文書・製品情報</p>
+          </div>
+        </div>
+        <button id="btnCloseDetailModal" class="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-200/60 transition flex-shrink-0" aria-label="閉じる">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- モーダル本文（スクロール可能） -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs custom-scroll" id="detailModalBody">
+        <!-- JSで動的描画 -->
+      </div>
+
+      <!-- モーダルフッター -->
+      <div class="p-3 sm:p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-2">
+        <a id="detailModalExternalLink" href="#" target="_blank" class="text-slate-400 hover:text-slate-600 text-[11px] flex items-center gap-1 hover:underline">
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> 検索サイトで開く
+        </a>
+        <button id="btnCloseDetailModalFooter" class="bg-[#185b37] hover:bg-[#004d29] text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-sm transition active:scale-95">
+          テストに戻る
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let allDrugs = [];
+    
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    
+    const SETTINGS_STORAGE_KEY = 'kotaro_quiz_filter_settings';
+    function loadSavedSettings() {
+      try {
+        const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return {
+            mode: parsed.mode || 'prescToHerb',
+            medical: parsed.medical !== undefined ? parsed.medical : true,
+            sajikurabu: parsed.sajikurabu !== undefined ? parsed.sajikurabu : true,
+            kyoryokukai: parsed.kyoryokukai !== undefined ? parsed.kyoryokukai : true
+          };
+        }
+      } catch (e) {}
+      return {
+        mode: 'prescToHerb',
+        medical: true,
+        sajikurabu: true,
+        kyoryokukai: true
+      };
+    }
+
+    function saveSettings(settings) {
+      try {
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+      } catch (e) {}
+    }
+
+    let activeFilter = loadSavedSettings();
+    let currentPool = [];
+    let currentQuestion = null;
+    let selectedHerbs = new Set();
+    let score = 0;
+    let totalQuestions = 0;
+    let isAnswered = false;
+
+    function getStatsKey(mode) {
+      return `kotaro_quiz_stats_${mode || activeFilter.mode}`;
+    }
+
+    function loadStats(mode) {
+      try {
+        const raw = localStorage.getItem(getStatsKey(mode));
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveStats(stats, mode) {
+      try {
+        localStorage.setItem(getStatsKey(mode), JSON.stringify(stats));
+      } catch (e) {}
+    }
+
+    function updateDrugResult(drugName, isCorrect) {
+      const stats = loadStats(activeFilter.mode);
+      if (!stats[drugName]) {
+        stats[drugName] = { streak: 0, mastered: false };
+      }
+
+      if (isCorrect) {
+        stats[drugName].streak = (stats[drugName].streak || 0) + 1;
+        stats[drugName].lastResult = true;
+        if (stats[drugName].streak >= 10) {
+          stats[drugName].mastered = true;
+        }
+      } else {
+        stats[drugName].streak = 0;
+        stats[drugName].mastered = false;
+        stats[drugName].lastResult = false;
+      }
+
+      saveStats(stats, activeFilter.mode);
+      updateMasteryProgressUI();
+      return stats[drugName];
+    }
+
+    const SIMILAR_HERBS = {
+      'ソウジュツ': ['ビャクジュツ', 'ハンゲ', 'チンピ'],
+      'ビャクジュツ': ['ソウジュツ', 'ブクリョウ', 'ニンジン'],
+      'ショウキョウ': ['カンキョウ', 'ケイヒ', 'タイソウ'],
+      'カンキョウ': ['ショウキョウ', 'ニンジン', 'ブクリョウ'],
+      'ケイヒ': ['ケイガイ', 'マオウ', 'シャクヤク'],
+      'シャクヤク': ['ボタンピ', 'トウキ', 'カンゾウ'],
+      'トウキ': ['センキュウ', 'シャクヤク', 'ジオウ'],
+      'センキュウ': ['トウキ', 'コウボク', 'キキョウ'],
+      'カンゾウ': ['ダイオウ', 'オウゴン', 'サイコ'],
+      'ダイオウ': ['カンゾウ', 'ボウショウ', 'コウボク'],
+      'サイコ': ['オウゴン', 'ハンゲ', 'ニンジン'],
+      'オウゴン': ['サイコ', 'オウレン', 'オウバク'],
+      'オウレン': ['オウゴン', 'オウバク', 'サンシシ'],
+      'オウバク': ['オウレン', 'オウゴン', 'チモ'],
+      'ブクリョウ': ['チョレイ', 'タクシャ', 'ビャクジュツ'],
+      'チョレイ': ['ブクリョウ', 'タクシャ', 'カッセキ'],
+      'タクシャ': ['チョレイ', 'ブクリョウ', 'ジオウ'],
+      'マオウ': ['ケイヒ', 'キョウニン', 'セッコウ'],
+      'キョウニン': ['マオウ', 'ハンゲ', 'トウニン'],
+      'トウニン': ['ボタンピ', 'コウブシ', 'シャクヤク'],
+      'ボタンピ': ['トウニン', 'シャクヤク', 'ジオウ'],
+      'ジオウ': ['トウキ', 'シャクヤク', 'サンシュユ'],
+      'チンピ': ['キジツ', 'コウボク', 'ソヨウ'],
+      'コウボク': ['チンピ', 'ソヨウ', 'ハンゲ'],
+      'ハンゲ': ['ブクリョウ', 'ショウキョウ', 'コウボク'],
+      'タイソウ': ['ショウキョウ', 'カンゾウ', 'ニンジン'],
+      'ニンジン': ['オウギ', 'ビャクジュツ', 'カンゾウ'],
+      'オウギ': ['ニンジン', 'ケイヒ', 'ボウフウ'],
+      'ボウフウ': ['ケイガイ', 'ドクカツ', 'サイコ']
+    };
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      initUIListeners();
+      await loadData();
+      startNewGame();
+    });
+
+    async function loadData() {
+      try {
+        const res = await fetch('data.json?t=' + Date.now());
+        const json = await res.json();
+        allDrugs = (json.data || []).filter(item => {
+          const crude = (item.ingredients || []).filter(i => !i.isExtract && i.name);
+          return crude.length > 0;
+        });
+      } catch (e) {
+        alert('data.jsonの読み込みに失敗しました。');
+      }
+    }
+
+    function initUIListeners() {
+      document.getElementById('btnSettings').addEventListener('click', () => {
+        document.getElementById('settingsPanel').classList.toggle('hidden');
+        updateMasteryProgressUI();
+      });
+      document.getElementById('btnCloseSettings').addEventListener('click', () => {
+        document.getElementById('settingsPanel').classList.add('hidden');
+      });
+
+      document.getElementById('catMedical').checked = activeFilter.medical;
+      document.getElementById('catSaji').checked = activeFilter.sajikurabu;
+      document.getElementById('catKyoryoku').checked = activeFilter.kyoryokukai;
+
+      document.querySelectorAll('.mode-select-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.mode-select-btn').forEach(b => {
+            b.classList.remove('border-[#185b37]', 'bg-emerald-50', 'text-[#003e20]');
+            b.classList.add('border-slate-200', 'text-slate-600');
+          });
+          btn.classList.add('border-[#185b37]', 'bg-emerald-50', 'text-[#003e20]');
+          btn.classList.remove('border-slate-200', 'text-slate-600');
+          activeFilter.mode = btn.dataset.mode;
+          saveSettings(activeFilter);
+          updateMasteryProgressUI();
+        });
+      });
+
+      document.getElementById('btnApplySettings').addEventListener('click', () => {
+        activeFilter.medical = document.getElementById('catMedical').checked;
+        activeFilter.sajikurabu = document.getElementById('catSaji').checked;
+        activeFilter.kyoryokukai = document.getElementById('catKyoryoku').checked;
+
+        if (!activeFilter.medical && !activeFilter.sajikurabu && !activeFilter.kyoryokukai) {
+          alert('少なくとも1つの出題カテゴリを選択してください。');
+          return;
+        }
+
+        saveSettings(activeFilter);
+        document.getElementById('settingsPanel').classList.add('hidden');
+        startNewGame();
+      });
+
+      document.getElementById('btnNextQuestion').addEventListener('click', () => {
+        generateQuestion();
+      });
+
+      document.getElementById('btnOpenMasteryModal').addEventListener('click', () => {
+        openMasteryModal();
+      });
+      document.getElementById('btnCloseMasteryModal').addEventListener('click', () => {
+        document.getElementById('masteryModal').classList.add('hidden');
+      });
+      document.getElementById('btnCloseMasteryModalFooter').addEventListener('click', () => {
+        document.getElementById('masteryModal').classList.add('hidden');
+      });
+
+      // 商品詳細モーダルリスナー
+      document.getElementById('btnOpenDetailModal').addEventListener('click', openDrugDetailModal);
+      document.getElementById('btnCloseDetailModal').addEventListener('click', closeDrugDetailModal);
+      document.getElementById('btnCloseDetailModalFooter').addEventListener('click', closeDrugDetailModal);
+      document.getElementById('drugDetailModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('drugDetailModal')) {
+          closeDrugDetailModal();
+        }
+      });
+
+      let modalActiveTab = 'prescToHerb';
+      document.getElementById('tabPrescToHerb').addEventListener('click', () => {
+        modalActiveTab = 'prescToHerb';
+        document.getElementById('tabPrescToHerb').className = 'pb-2.5 border-b-2 border-[#185b37] text-[#003e20] transition font-bold';
+        document.getElementById('tabHerbToPresc').className = 'pb-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition font-bold';
+        renderMasteryModalList(modalActiveTab);
+      });
+      document.getElementById('tabHerbToPresc').addEventListener('click', () => {
+        modalActiveTab = 'herbToPresc';
+        document.getElementById('tabHerbToPresc').className = 'pb-2.5 border-b-2 border-[#185b37] text-[#003e20] transition font-bold';
+        document.getElementById('tabPrescToHerb').className = 'pb-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition font-bold';
+        renderMasteryModalList(modalActiveTab);
+      });
+
+      document.getElementById('btnResetAllStats').addEventListener('click', () => {
+        if (confirm('すべての習得・連続正解データを初期化してもよろしいですか？')) {
+          localStorage.removeItem('kotaro_quiz_stats_prescToHerb');
+          localStorage.removeItem('kotaro_quiz_stats_herbToPresc');
+          updateMasteryProgressUI();
+          renderMasteryModalList(modalActiveTab);
+          alert('進捗データを初期化しました。');
+          startNewGame();
+        }
+      });
+    }
+
+    function startNewGame() {
+      score = 0;
+      totalQuestions = 0;
+      document.getElementById('scoreCount').textContent = '0';
+      document.getElementById('totalCount').textContent = '0';
+
+      currentPool = allDrugs.filter(item => {
+        if (item.type === 'medical' && activeFilter.medical) return true;
+        if (item.otcCategory === 'sajikurabu' && activeFilter.sajikurabu) return true;
+        if (item.otcCategory === 'kyoryokukai' && activeFilter.kyoryokukai) return true;
+        return false;
+      });
+
+      const isPrescToHerb = activeFilter.mode === 'prescToHerb';
+      document.getElementById('badgeMode').textContent = isPrescToHerb ? '処方名 ⇒ 生薬' : '生薬 ⇒ 処方名';
+      
+      const cats = [];
+      if (activeFilter.medical) cats.push('医療用');
+      if (activeFilter.sajikurabu) cats.push('匙倶楽部');
+      if (activeFilter.kyoryokukai) cats.push('協力会');
+      document.getElementById('txtFilterSummary').textContent = cats.join(' / ');
+
+      document.querySelectorAll('.mode-select-btn').forEach(btn => {
+        if (btn.dataset.mode === activeFilter.mode) {
+          btn.classList.add('border-[#185b37]', 'bg-emerald-50', 'text-[#003e20]');
+          btn.classList.remove('border-slate-200', 'text-slate-600');
+        } else {
+          btn.classList.remove('border-[#185b37]', 'bg-emerald-50', 'text-[#003e20]');
+          btn.classList.add('border-slate-200', 'text-slate-600');
+        }
+      });
+
+      updateMasteryProgressUI();
+      generateQuestion();
+    }
+
+    function calculateWeight(streak, lastResult) {
+      if (streak >= 10) return 0;
+      if (lastResult === false) return 1.5;
+
+      switch (streak) {
+        case 0:
+        case 1:
+        case 2:
+          return 1.0;
+        case 3: return 0.6;
+        case 4: return 0.4;
+        case 5: return 0.25;
+        case 6: return 0.15;
+        case 7: return 0.08;
+        case 8: return 0.04;
+        case 9: return 0.02;
+        default: return 0.01;
+      }
+    }
+
+    function pickNextItemWeighted(pool, mode) {
+      const stats = loadStats(mode);
+      
+      const candidates = [];
+      let totalWeight = 0;
+
+      for (let item of pool) {
+        const itemStat = stats[item.name] || { streak: 0, mastered: false };
+        const w = calculateWeight(itemStat.streak || 0, itemStat.lastResult);
+        if (w > 0) {
+          candidates.push({ item, weight: w, streak: itemStat.streak || 0 });
+          totalWeight += w;
+        }
+      }
+
+      if (candidates.length === 0 || totalWeight === 0) {
+        return null;
+      }
+
+      let rand = Math.random() * totalWeight;
+      for (let c of candidates) {
+        if (rand < c.weight) {
+          return c;
+        }
+        rand -= c.weight;
+      }
+      return candidates[candidates.length - 1];
+    }
+
+    function updateMasteryProgressUI() {
+      const stats = loadStats(activeFilter.mode);
+      let masteredCount = 0;
+      let total = currentPool.length;
+
+      currentPool.forEach(item => {
+        if (stats[item.name] && stats[item.name].streak >= 10) {
+          masteredCount++;
+        }
+      });
+
+      const rate = total > 0 ? Math.round((masteredCount / total) * 100) : 0;
+      const rateText = document.getElementById('masteryRateText');
+      const countText = document.getElementById('masteredCountText');
+      const totalText = document.getElementById('totalEligibleText');
+      const bar = document.getElementById('masteryProgressBar');
+
+      if (rateText) rateText.textContent = `${rate}%`;
+      if (countText) countText.textContent = masteredCount;
+      if (totalText) totalText.textContent = total;
+      if (bar) bar.style.width = `${rate}%`;
+    }
+
+    function generateQuestion() {
+      if (currentPool.length === 0) {
+        alert('該当する商品がありません。絞り込み設定を確認してください。');
+        return;
+      }
+
+      isAnswered = false;
+      selectedHerbs.clear();
+      document.getElementById('explanationArea').classList.add('hidden');
+
+      const chosen = pickNextItemWeighted(currentPool, activeFilter.mode);
+
+      if (!chosen) {
+        showAllCompletedScreen();
+        return;
+      }
+
+      const correctItem = chosen.item;
+      const currentStreak = chosen.streak || 0;
+      const correctHerbs = (correctItem.ingredients || []).filter(i => !i.isExtract && i.name).map(i => i.name);
+
+      currentQuestion = {
+        item: correctItem,
+        streak: currentStreak,
+        correctHerbs: correctHerbs,
+        herbsDetails: (correctItem.ingredients || []).filter(i => !i.isExtract && i.name)
+      };
+
+      totalQuestions++;
+      document.getElementById('totalCount').textContent = totalQuestions;
+
+      const streakBadge = document.getElementById('streakBadge');
+      const streakText = document.getElementById('streakBadgeText');
+      if (currentStreak > 0) {
+        streakBadge.classList.remove('hidden');
+        if (currentStreak >= 5) {
+          streakBadge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm bg-amber-500 text-white animate-pulse';
+          streakText.textContent = `🔥 ${currentStreak}連続正解中！`;
+        } else {
+          streakBadge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm bg-amber-100 text-amber-800';
+          streakText.textContent = `${currentStreak}連続正解中`;
+        }
+      } else {
+        streakBadge.classList.add('hidden');
+      }
+
+      if (activeFilter.mode === 'prescToHerb') {
+        renderPrescToHerbQuestion();
+      } else {
+        renderHerbToPrescQuestion();
+      }
+    }
+
+    function showAllCompletedScreen() {
+      const ansArea = document.getElementById('answersContainer');
+
+      document.getElementById('qSubTitle').textContent = 'CONGRATULATIONS!';
+      document.getElementById('qTitle').innerHTML = '🎉 選択中の全処方を完璧にマスターしました！';
+      document.getElementById('qDescription').textContent = '10回連続正解をすべて達成しました。設定からカテゴリを変更するか、進捗をリセットして再挑戦できます。';
+      document.getElementById('streakBadge').classList.add('hidden');
+
+      ansArea.innerHTML = `
+        <div class="text-center py-10 space-y-4">
+          <div class="text-6xl text-amber-500 animate-bounce"><i class="fa-solid fa-trophy"></i></div>
+          <p class="text-sm font-bold text-slate-600">おめでとうございます！出題対象の処方をすべて卒業しました。</p>
+          <button onclick="document.getElementById('btnSettings').click()" class="bg-[#185b37] hover:bg-[#004d29] text-white font-bold px-6 py-3 rounded-2xl shadow-lg transition">
+            設定を開いて範囲変更・復習する
+          </button>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // パターン1: 処方名 ⇒ 生薬
+    // ==========================================
+    function renderPrescToHerbQuestion() {
+      const ansArea = document.getElementById('answersContainer');
+      const item = currentQuestion.item;
+      const correctHerbs = currentQuestion.correctHerbs;
+
+      document.getElementById('qSubTitle').textContent = `処方に含まれる生薬をすべて選んでください（${correctHerbs.length}生薬）`;
+      
+      let badge = '';
+      if (item.type === 'medical') badge = '<span class="text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full ml-2">医療用</span>';
+      else if (item.otcCategory === 'sajikurabu') badge = '<span class="text-xs font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full ml-2">匙倶楽部</span>';
+      else if (item.otcCategory === 'kyoryokukai') badge = '<span class="text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full ml-2">協力会</span>';
+
+      document.getElementById('qTitle').innerHTML = `${item.name} ${badge}`;
+      if (item.efficacy) {
+        document.getElementById('qDescription').innerHTML = `
+          <div class="mt-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 max-h-44 overflow-y-auto custom-scroll text-left shadow-xs">
+            <div class="text-[11px] font-bold text-[#185b37] mb-1 flex items-center gap-1.5">
+              <i class="fa-solid fa-notes-medical"></i> 効能・効果
+            </div>
+            <div class="text-xs text-slate-700 leading-relaxed font-medium whitespace-pre-wrap">${escapeHtml(item.efficacy)}</div>
+          </div>
+        `;
+      } else {
+        document.getElementById('qDescription').innerHTML = '';
+      }
+
+      const dummyHerbs = pickDummyHerbs(correctHerbs, Math.min(8, Math.max(4, Math.floor(correctHerbs.length * 0.8))));
+      const allChoices = Array.from(new Set([...correctHerbs, ...dummyHerbs])).sort(() => Math.random() - 0.5);
+
+      let html = `
+        <div class="mb-4">
+          <div class="flex flex-wrap gap-2.5 justify-center py-2" id="herbChipsBox">
+      `;
+
+      allChoices.forEach(herb => {
+        html += `
+          <button type="button" class="herb-chip px-3.5 py-2 rounded-2xl border-2 border-slate-200 bg-slate-50 text-slate-700 font-bold text-sm shadow-sm flex items-center gap-1.5 hover:border-[#185b37]" data-herb="${herb}">
+            <i class="fa-regular fa-circle text-xs text-slate-300 chip-icon"></i>
+            <span>${herb}</span>
+          </button>
+        `;
+      });
+
+      html += `
+          </div>
+        </div>
+        <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+          <span class="text-xs text-slate-400">選択中: <strong id="selectedCountText" class="text-[#185b37] font-bold">0</strong> / ${correctHerbs.length} 個</span>
+          <button id="btnSubmitHerbs" class="bg-[#185b37] hover:bg-[#004d29] text-white font-bold px-6 py-2.5 rounded-xl text-sm shadow-md transition disabled:opacity-40 disabled:pointer-events-none">
+            解答する
+          </button>
+        </div>
+      `;
+
+      ansArea.innerHTML = html;
+
+      const chips = ansArea.querySelectorAll('.herb-chip');
+      chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          if (isAnswered) return;
+          const herb = chip.dataset.herb;
+          const icon = chip.querySelector('.chip-icon');
+
+          if (selectedHerbs.has(herb)) {
+            selectedHerbs.delete(herb);
+            chip.classList.remove('border-[#185b37]', 'bg-[#185b37]', 'text-white');
+            chip.classList.add('border-slate-200', 'bg-slate-50', 'text-slate-700');
+            icon.className = 'fa-regular fa-circle text-xs text-slate-300 chip-icon';
+          } else {
+            selectedHerbs.add(herb);
+            chip.classList.add('border-[#185b37]', 'bg-[#185b37]', 'text-white');
+            chip.classList.remove('border-slate-200', 'bg-slate-50', 'text-slate-700');
+            icon.className = 'fa-solid fa-check text-xs text-white chip-icon';
+          }
+          document.getElementById('selectedCountText').textContent = selectedHerbs.size;
+        });
+      });
+
+      document.getElementById('btnSubmitHerbs').addEventListener('click', () => {
+        if (isAnswered) return;
+        submitPrescToHerbAnswer(chips);
+      });
+    }
+
+    function submitPrescToHerbAnswer(chips) {
+      isAnswered = true;
+      const correctHerbs = new Set(currentQuestion.correctHerbs);
+
+      let isPerfect = true;
+      if (selectedHerbs.size !== correctHerbs.size) {
+        isPerfect = false;
+      } else {
+        for (let h of selectedHerbs) {
+          if (!correctHerbs.has(h)) {
+            isPerfect = false;
+            break;
+          }
+        }
+      }
+
+      chips.forEach(chip => {
+        const h = chip.dataset.herb;
+        const icon = chip.querySelector('.chip-icon');
+        const isSelected = selectedHerbs.has(h);
+        const isRealCorrect = correctHerbs.has(h);
+
+        if (isRealCorrect) {
+          chip.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-700');
+          chip.classList.add('bg-[#185b37]', 'border-[#185b37]', 'text-white');
+          icon.className = 'fa-solid fa-check-circle text-xs text-emerald-200 chip-icon';
+        } else if (isSelected && !isRealCorrect) {
+          chip.classList.remove('bg-[#185b37]', 'border-[#185b37]', 'text-white');
+          chip.classList.add('bg-rose-500', 'border-rose-600', 'text-white', 'wrong-anim');
+          icon.className = 'fa-solid fa-xmark text-xs text-rose-200 chip-icon';
+        } else {
+          chip.classList.add('opacity-30');
+        }
+      });
+
+      const updated = updateDrugResult(currentQuestion.item.name, isPerfect);
+      showResult(isPerfect, updated);
+    }
+
+    // ==========================================
+    // パターン2: 生薬 ⇒ 処方名
+    // ==========================================
+    function renderHerbToPrescQuestion() {
+      const ansArea = document.getElementById('answersContainer');
+      const item = currentQuestion.item;
+      const correctHerbs = currentQuestion.correctHerbs;
+
+      document.getElementById('qSubTitle').textContent = `以下の生薬と効能効果を持つ処方はどれ？（全${correctHerbs.length}生薬）`;
+      
+      let herbBadges = correctHerbs.map(h => `<span class="inline-block bg-white text-slate-800 border border-slate-200 font-bold px-2.5 py-1 rounded-lg text-sm mr-1.5 mb-1.5 shadow-sm">${h}</span>`).join('');
+      document.getElementById('qTitle').innerHTML = `<div class="mt-2 flex flex-wrap">${herbBadges}</div>`;
+      
+      if (item.efficacy) {
+        document.getElementById('qDescription').innerHTML = `
+          <div class="mt-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 max-h-36 overflow-y-auto custom-scroll text-left shadow-xs">
+            <div class="text-[11px] font-bold text-[#185b37] mb-1 flex items-center gap-1.5">
+              <i class="fa-solid fa-notes-medical"></i> 効能・効果
+            </div>
+            <div class="text-xs text-slate-700 leading-relaxed font-medium whitespace-pre-wrap">${escapeHtml(item.efficacy)}</div>
+          </div>
+        `;
+      } else {
+        document.getElementById('qDescription').innerHTML = `<div class="text-xs text-slate-400 mt-1">全 ${correctHerbs.length} 生薬</div>`;
+      }
+
+      const dummyItems = pickSimilarPrescriptions(item, 3);
+      const choices = [item, ...dummyItems].sort(() => Math.random() - 0.5);
+
+      let html = '<div class="grid grid-cols-1 gap-2.5 my-auto">';
+      choices.forEach((choice, idx) => {
+        let badge = '';
+        if (choice.type === 'medical') badge = '<span class="text-[10px] font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded ml-1">医療</span>';
+        else if (choice.otcCategory === 'sajikurabu') badge = '<span class="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded ml-1">匙</span>';
+        else if (choice.otcCategory === 'kyoryokukai') badge = '<span class="text-[10px] font-bold bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded ml-1">協</span>';
+
+        html += `
+          <button type="button" class="choice-btn w-full p-4 rounded-2xl border-2 border-slate-200 hover:border-[#185b37] hover:bg-emerald-50/30 text-left font-bold text-base text-slate-800 flex items-center justify-between transition shadow-sm" data-id="${choice.name}">
+            <div class="flex items-center">
+              <span class="w-6 h-6 rounded-full bg-slate-100 text-slate-500 text-xs flex items-center justify-center mr-3 font-semibold">${idx + 1}</span>
+              <span>${choice.name}</span>
+              ${badge}
+            </div>
+            <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
+          </button>
+        `;
+      });
+      html += '</div>';
+
+      ansArea.innerHTML = html;
+
+      const btns = ansArea.querySelectorAll('.choice-btn');
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (isAnswered) return;
+          isAnswered = true;
+          const isCorrect = btn.dataset.id === item.name;
+
+          btns.forEach(b => {
+            if (b.dataset.id === item.name) {
+              b.classList.remove('border-slate-200');
+              b.classList.add('bg-[#185b37]', 'border-[#185b37]', 'text-white', 'correct-anim');
+              b.querySelector('i').className = 'fa-solid fa-circle-check text-white text-base';
+            } else if (b === btn && !isCorrect) {
+              b.classList.remove('border-slate-200');
+              b.classList.add('bg-rose-500', 'border-rose-600', 'text-white', 'wrong-anim');
+              b.querySelector('i').className = 'fa-solid fa-circle-xmark text-white text-base';
+            } else {
+              b.classList.add('opacity-40');
+            }
+          });
+
+          const updated = updateDrugResult(item.name, isCorrect);
+          showResult(isCorrect, updated);
+        });
+      });
+    }
+
+    // --- 結果・解説表示 ---
+    function showResult(isCorrect, updatedStat) {
+      if (isCorrect) score++;
+      document.getElementById('scoreCount').textContent = score;
+
+      const expArea = document.getElementById('explanationArea');
+      const banner = document.getElementById('resultBanner');
+      const icon = document.getElementById('resultIcon');
+      const status = document.getElementById('resultStatus');
+      const detail = document.getElementById('resultDetail');
+      const herbListBox = document.getElementById('correctHerbList');
+      const btnGoToDetail = document.getElementById('btnGoToDetail');
+      const btnGoToDetailText = document.getElementById('btnGoToDetailText');
+
+      expArea.classList.remove('hidden');
+
+      const streak = updatedStat ? updatedStat.streak : 0;
+      let streakMsg = '';
+      if (isCorrect) {
+        if (streak >= 10) {
+          streakMsg = '🏆 10連続正解達成！この処方は【完璧判定】となり出題卒業です！';
+        } else if (streak >= 3) {
+          streakMsg = `🔥 ${streak}連続正解中！（習得度が高まったため出題頻度が下がります）`;
+        } else {
+          streakMsg = `連続正解数: ${streak}回`;
+        }
+      } else {
+        streakMsg = '連続正解数がリセットされました。復習のため出題頻度が上がります。';
+      }
+
+      if (isCorrect) {
+        banner.className = 'p-3.5 rounded-2xl flex items-center justify-between mb-3 bg-emerald-50 text-[#003e20] border border-emerald-200';
+        icon.className = 'fa-solid fa-circle-check text-2xl text-[#185b37]';
+        status.textContent = '正解！素晴らしい！';
+        detail.textContent = streakMsg;
+      } else {
+        banner.className = 'p-3.5 rounded-2xl flex items-center justify-between mb-3 bg-rose-50 text-rose-900 border border-rose-200';
+        icon.className = 'fa-solid fa-circle-xmark text-2xl text-rose-600';
+        status.textContent = 'おしい！不正解です';
+        detail.textContent = streakMsg;
+      }
+
+      herbListBox.innerHTML = currentQuestion.herbsDetails.map(h => `
+        <span class="bg-white border border-slate-200 px-2.5 py-1 rounded-lg text-slate-700 font-medium shadow-xs">
+          <strong>${h.name}</strong> <span class="text-[11px] text-slate-400 font-normal">${h.amountStr || ''}</span>
+        </span>
+      `).join('');
+
+      const effBox = document.getElementById('correctEfficacyBox');
+      const effText = document.getElementById('correctEfficacyText');
+      if (effBox && effText) {
+        if (currentQuestion.item.efficacy) {
+          effBox.classList.remove('hidden');
+          effText.textContent = currentQuestion.item.efficacy;
+        } else {
+          effBox.classList.add('hidden');
+        }
+      }
+
+      const item = currentQuestion.item;
+      const btnOpenDetailText = document.getElementById('btnOpenDetailModalText');
+      if (btnOpenDetailText) {
+        btnOpenDetailText.textContent = `「${item.name}」の添付文書・詳細を確認`;
+      }
+    }
+
+    // --- 商品詳細モーダル（スマホ対応・同一画面） ---
+    function openDrugDetailModal() {
+      if (!currentQuestion || !currentQuestion.item) return;
+      const item = currentQuestion.item;
+      
+      const modal = document.getElementById('drugDetailModal');
+      const title = document.getElementById('detailModalTitle');
+      const badge = document.getElementById('detailModalBadge');
+      const sub = document.getElementById('detailModalSub');
+      const body = document.getElementById('detailModalBody');
+      const extLink = document.getElementById('detailModalExternalLink');
+
+      title.textContent = item.name;
+      
+      let badgeHtml = '';
+      if (item.type === 'medical') badgeHtml = '<span class="text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">医療用</span>';
+      else if (item.otcCategory === 'sajikurabu') badgeHtml = '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">匙倶楽部</span>';
+      else if (item.otcCategory === 'kyoryokukai') badgeHtml = '<span class="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">協力会</span>';
+      badge.innerHTML = badgeHtml;
+
+      sub.textContent = item.subCategory ? `処方区分: ${item.subCategory}` : '小太郎漢方製薬 製品情報';
+      extLink.href = `index.html?detail=${encodeURIComponent(item.name)}`;
+
+      // 構成生薬一覧の構築
+      const crudeList = (item.ingredients || item.components || []).filter(i => !i.isExtract && i.name);
+      const extractList = (item.ingredients || item.components || []).filter(i => i.isExtract && i.name);
+
+      let herbsHtml = '';
+      if (crudeList.length > 0) {
+        herbsHtml = crudeList.map(h => `
+          <div class="bg-white border border-slate-200/80 rounded-xl px-2.5 py-1.5 flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700">${escapeHtml(h.name)}</span>
+            <span class="text-slate-400 text-[11px] font-mono">${escapeHtml(h.amountStr || '')}</span>
+          </div>
+        `).join('');
+      }
+
+      let extractHtml = '';
+      if (extractList.length > 0) {
+        extractHtml = `
+          <div class="mt-2 text-[11px] text-slate-500 bg-slate-100/60 p-2 rounded-xl border border-slate-200/50">
+            <span class="font-bold text-slate-600">エキス等:</span> ${extractList.map(e => `${escapeHtml(e.name)} ${escapeHtml(e.amountStr || '')}`).join('、 ')}
+          </div>
+        `;
+      }
+
+      body.innerHTML = `
+        <!-- 効能・効果 -->
+        ${item.efficacy ? `
+        <div class="bg-emerald-50/50 border border-emerald-100/80 rounded-2xl p-3.5">
+          <div class="text-[11px] font-bold text-[#185b37] mb-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-notes-medical"></i> 効能・効果
+          </div>
+          <div class="text-xs text-slate-700 leading-relaxed font-medium whitespace-pre-wrap">${escapeHtml(item.efficacy)}</div>
+        </div>
+        ` : ''}
+
+        <!-- 構成生薬一覧 -->
+        ${crudeList.length > 0 ? `
+        <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5">
+          <div class="text-[11px] font-bold text-slate-600 mb-2 flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-seedling text-[#185b37]"></i> 構成生薬一覧</span>
+            <span class="text-slate-400 font-normal text-[10px]">全 ${crudeList.length} 生薬</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+            ${herbsHtml}
+          </div>
+          ${extractHtml}
+        </div>
+        ` : ''}
+
+        <!-- 処方の特徴・解説 -->
+        ${item.feature ? `
+        <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5">
+          <div class="text-[11px] font-bold text-slate-600 mb-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-book-open text-[#185b37]"></i> 処方の特徴・解説
+          </div>
+          <div class="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">${escapeHtml(item.feature)}</div>
+        </div>
+        ` : ''}
+
+        <!-- 用法・用量 -->
+        ${item.usage ? `
+        <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5">
+          <div class="text-[11px] font-bold text-slate-600 mb-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-clock text-[#185b37]"></i> 用法・用量 ${item.dailyDose ? `<span class="text-slate-400 font-normal text-[10px]">(${escapeHtml(item.dailyDose)})</span>` : ''}
+          </div>
+          <div class="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">${escapeHtml(item.usage)}</div>
+        </div>
+        ` : ''}
+
+        <!-- 使用上の注意 -->
+        ${item.precautions ? `
+        <div class="bg-amber-50/40 border border-amber-200/60 rounded-2xl p-3.5">
+          <div class="text-[11px] font-bold text-amber-800 mb-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-triangle-exclamation"></i> 使用上の注意
+          </div>
+          <div class="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">${escapeHtml(item.precautions)}</div>
+        </div>
+        ` : ''}
+      `;
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeDrugDetailModal() {
+      const modal = document.getElementById('drugDetailModal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+    }
+
+    // --- 習得状況・完璧一覧モーダル処理 ---
+    function openMasteryModal() {
+      document.getElementById('masteryModal').classList.remove('hidden');
+      
+      const statsPresc = loadStats('prescToHerb');
+      const statsHerb = loadStats('herbToPresc');
+
+      const countP = Object.values(statsPresc).filter(s => s.streak >= 10).length;
+      const countH = Object.values(statsHerb).filter(s => s.streak >= 10).length;
+
+      document.getElementById('modalPrescCount').textContent = `${countP}完璧`;
+      document.getElementById('modalHerbCount').textContent = `${countH}完璧`;
+
+      renderMasteryModalList(activeFilter.mode);
+    }
+
+    function renderMasteryModalList(mode) {
+      const container = document.getElementById('masteryListContent');
+      const stats = loadStats(mode);
+
+      const list = currentPool.map(item => {
+        const s = stats[item.name] || { streak: 0, mastered: false };
+        return { item, streak: s.streak || 0, mastered: s.streak >= 10 };
+      }).sort((a, b) => {
+        if (a.mastered !== b.mastered) return b.mastered ? 1 : -1;
+        return b.streak - a.streak;
+      });
+
+      if (list.length === 0) {
+        container.innerHTML = '<div class="text-center text-slate-400 py-8">対象の処方がありません</div>';
+        return;
+      }
+
+      let html = '';
+      
+      const masteredList = list.filter(x => x.mastered);
+      const learningList = list.filter(x => !x.mastered);
+
+      if (masteredList.length > 0) {
+        html += `
+          <div>
+            <div class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <i class="fa-solid fa-trophy"></i> 完璧（出題卒業済み / 10連続正解達成）: ${masteredList.length}処方
+            </div>
+            <div class="grid grid-cols-1 gap-2">
+        `;
+        masteredList.forEach(m => {
+          let badge = m.item.type === 'medical' ? '<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">医療用</span>' :
+                      m.item.otcCategory === 'sajikurabu' ? '<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">匙倶楽部</span>' :
+                      '<span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">協力会</span>';
+
+          const crudeNames = (m.item.ingredients || []).filter(i => !i.isExtract).map(i => i.name).join('・');
+
+          html += `
+            <div class="p-3 rounded-2xl border-2 border-amber-200 bg-amber-50/50 flex items-center justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-slate-800 text-sm">${m.item.name}</span>
+                  ${badge}
+                </div>
+                <div class="text-[11px] text-slate-400 mt-0.5 truncate max-w-sm">${crudeNames}</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <a href="index.html?detail=${encodeURIComponent(m.item.name)}" target="_blank" class="text-[#185b37] hover:text-[#003e20] p-1" title="詳細画面を開く">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+                <span class="bg-amber-500 text-white text-xs font-black px-2.5 py-1 rounded-xl shadow-sm flex items-center gap-1">
+                  <i class="fa-solid fa-check-double"></i> 完璧
+                </span>
+                <button onclick="resetSingleDrug('${m.item.name}', '${mode}')" class="text-slate-300 hover:text-rose-500 p-1" title="この処方の進捗をリセット">
+                  <i class="fa-solid fa-rotate-left"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div></div>';
+      }
+
+      html += `
+        <div class="pt-2">
+          <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <i class="fa-solid fa-book-open"></i> 学習中・未達成: ${learningList.length}処方
+          </div>
+          <div class="grid grid-cols-1 gap-2">
+      `;
+      learningList.forEach(l => {
+        let badge = l.item.type === 'medical' ? '<span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">医療</span>' :
+                    l.item.otcCategory === 'sajikurabu' ? '<span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">匙</span>' :
+                    '<span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">協</span>';
+
+        let streakColor = l.streak >= 5 ? 'text-amber-500 font-bold' : l.streak >= 3 ? 'text-[#185b37] font-bold' : 'text-slate-400';
+        let progressPercent = (l.streak / 10) * 100;
+
+        html += `
+          <div class="p-2.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-700">${l.item.name}</span>
+              ${badge}
+            </div>
+            <div class="flex items-center gap-3">
+              <a href="index.html?detail=${encodeURIComponent(l.item.name)}" target="_blank" class="text-slate-400 hover:text-[#185b37]" title="詳細画面を開く">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </a>
+              <div class="flex items-center gap-1.5">
+                <div class="w-16 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                  <div class="bg-[#185b37] h-full" style="width: ${progressPercent}%"></div>
+                </div>
+                <span class="${streakColor} min-w-[50px] text-right">${l.streak} / 10回</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div></div>';
+
+      container.innerHTML = html;
+    }
+
+    window.resetSingleDrug = function(drugName, mode) {
+      if (confirm(`「${drugName}」の進捗をリセットして再出題するようにしますか？`)) {
+        const stats = loadStats(mode);
+        if (stats[drugName]) {
+          stats[drugName] = { streak: 0, mastered: false };
+          saveStats(stats, mode);
+          renderMasteryModalList(mode);
+          updateMasteryProgressUI();
+        }
+      }
+    };
+
+    function pickDummyHerbs(correctHerbs, count) {
+      const correctSet = new Set(correctHerbs);
+      const candidates = new Set();
+
+      correctHerbs.forEach(h => {
+        if (SIMILAR_HERBS[h]) {
+          SIMILAR_HERBS[h].forEach(sim => {
+            if (!correctSet.has(sim)) candidates.add(sim);
+          });
+        }
+      });
+
+      const frequentHerbs = ['カンゾウ', 'ショウキョウ', 'ケイヒ', 'タイソウ', 'ブクリョウ', 'シャクヤク', 'オウゴン', 'ハンゲ', 'ビャクジュツ', 'トウキ', 'サイコ', 'センキュウ', 'ニンジン'];
+      frequentHerbs.forEach(fh => {
+        if (!correctSet.has(fh)) candidates.add(fh);
+      });
+
+      const array = Array.from(candidates);
+      return array.sort(() => Math.random() - 0.5).slice(0, count);
+    }
+
+    function pickSimilarPrescriptions(targetItem, count) {
+      const targetHerbs = new Set((targetItem.ingredients || []).filter(i => !i.isExtract).map(i => i.name));
+
+      const scored = currentPool
+        .filter(item => item.name !== targetItem.name)
+        .map(item => {
+          const herbs = (item.ingredients || []).filter(i => !i.isExtract).map(i => i.name);
+          let matchCount = 0;
+          herbs.forEach(h => {
+            if (targetHerbs.has(h)) matchCount++;
+          });
+          return { item, matchCount, total: herbs.length };
+        })
+        .filter(s => s.matchCount > 0)
+        .sort((a, b) => b.matchCount - a.matchCount);
+
+      const topSimilar = scored.slice(0, 10).map(s => s.item);
+      const shuffled = topSimilar.sort(() => Math.random() - 0.5);
+      
+      const result = shuffled.slice(0, count);
+      while (result.length < count) {
+        const randomItem = currentPool[Math.floor(Math.random() * currentPool.length)];
+        if (randomItem.name !== targetItem.name && !result.some(r => r.name === randomItem.name)) {
+          result.push(randomItem);
+        }
+      }
+      return result;
+    }
+  </script>
+</body>
+</html>
