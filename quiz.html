@@ -148,13 +148,13 @@
       </div>
 
       <!-- ステータスバー -->
-      <div class="flex items-center justify-between text-xs text-slate-500 mb-3 px-1">
-        <div class="flex items-center gap-2">
-          <span class="bg-[#185b37]/10 text-[#003e20] font-bold px-2 py-0.5 rounded-md" id="badgeMode">処方名 ⇒ 生薬</span>
-          <span id="txtFilterSummary" class="text-slate-400">医療用 / 匙 / 協力会</span>
+      <div class="flex items-center justify-between text-xs text-slate-500 mb-3 px-1 gap-2">
+        <div class="flex items-center gap-1.5 min-w-0 overflow-hidden">
+          <span class="bg-[#185b37]/10 text-[#003e20] font-bold px-2 py-0.5 rounded-md whitespace-nowrap shrink-0 text-[11px] sm:text-xs" id="badgeMode">処方名 ⇒ 生薬</span>
+          <span id="txtFilterSummary" class="text-slate-400 text-[11px] truncate whitespace-nowrap">医療用 / 匙 / 協力会</span>
         </div>
-        <div class="flex items-center gap-3">
-          <span>正答数: <strong id="scoreCount" class="text-[#185b37] font-bold text-sm">0</strong></span>
+        <div class="flex items-center gap-2.5 whitespace-nowrap shrink-0 text-[11px] sm:text-xs">
+          <span>正答: <strong id="scoreCount" class="text-[#185b37] font-bold text-sm">0</strong></span>
           <span>出題: <strong id="totalCount" class="font-bold text-sm">0</strong>問目</span>
         </div>
       </div>
@@ -166,12 +166,12 @@
         <div id="questionArea" class="mb-5">
           <div class="flex items-center justify-between mb-1">
             <div class="text-xs font-bold text-[#185b37] tracking-wider uppercase" id="qSubTitle">QUESTION</div>
-            <div id="streakBadge" class="hidden text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+            <div id="streakBadge" class="hidden text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm whitespace-nowrap shrink-0">
               <i class="fa-solid fa-fire text-amber-500"></i>
               <span id="streakBadgeText">3連続正解中</span>
             </div>
           </div>
-          <h2 class="text-2xl font-black text-slate-800 tracking-tight" id="qTitle">読み込み中...</h2>
+          <div id="qTitle" class="min-h-[2.5rem]">読み込み中...</div>
           <div id="qDescription" class="text-xs text-slate-400 mt-1"></div>
         </div>
 
@@ -738,11 +738,22 @@
       document.getElementById('qSubTitle').textContent = `処方に含まれる生薬をすべて選んでください（${correctHerbs.length}生薬）`;
       
       let badge = '';
-      if (item.type === 'medical') badge = '<span class="text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full ml-2">医療用</span>';
-      else if (item.otcCategory === 'sajikurabu') badge = '<span class="text-xs font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full ml-2">匙倶楽部</span>';
-      else if (item.otcCategory === 'kyoryokukai') badge = '<span class="text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full ml-2">協力会</span>';
+      if (item.type === 'medical') badge = '<span class="inline-block text-[11px] font-bold bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full whitespace-nowrap">医療用</span>';
+      else if (item.otcCategory === 'sajikurabu') badge = '<span class="inline-block text-[11px] font-bold bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full whitespace-nowrap">匙倶楽部</span>';
+      else if (item.otcCategory === 'kyoryokukai') badge = '<span class="inline-block text-[11px] font-bold bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full whitespace-nowrap">協力会</span>';
 
-      document.getElementById('qTitle').innerHTML = `${item.name} ${badge}`;
+      let safeName = escapeHtml(item.name);
+      // 「「コタロー」」などの製品元が「コ」と「タロー」で泣き別れ改行されないよう保護
+      safeName = safeName.replace(/(「[^」]+」)/g, '<span class="inline-block whitespace-nowrap">$1</span>');
+
+      document.getElementById('qTitle').innerHTML = `
+        <div class="flex flex-col gap-1.5">
+          <div>${badge}</div>
+          <div class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight leading-snug break-words">
+            ${safeName}
+          </div>
+        </div>
+      `;
       if (item.efficacy) {
         document.getElementById('qDescription').innerHTML = `
           <div class="mt-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 max-h-44 overflow-y-auto custom-scroll text-left shadow-xs">
@@ -766,7 +777,7 @@
 
       allChoices.forEach(herb => {
         html += `
-          <button type="button" class="herb-chip px-3.5 py-2 rounded-2xl border-2 border-slate-200 bg-slate-50 text-slate-700 font-bold text-sm shadow-sm flex items-center gap-1.5 hover:border-[#185b37]" data-herb="${herb}">
+          <button type="button" class="herb-chip px-3.5 py-2 rounded-2xl border-2 border-slate-200 bg-slate-50 text-slate-700 font-bold text-sm shadow-sm flex items-center gap-1.5 hover:border-[#185b37] whitespace-nowrap" data-herb="${herb}">
             <i class="fa-regular fa-circle text-xs text-slate-300 chip-icon"></i>
             <span>${herb}</span>
           </button>
@@ -863,7 +874,7 @@
 
       document.getElementById('qSubTitle').textContent = `以下の生薬と効能効果を持つ処方はどれ？（全${correctHerbs.length}生薬）`;
       
-      let herbBadges = correctHerbs.map(h => `<span class="inline-block bg-white text-slate-800 border border-slate-200 font-bold px-2.5 py-1 rounded-lg text-sm mr-1.5 mb-1.5 shadow-sm">${h}</span>`).join('');
+      let herbBadges = correctHerbs.map(h => `<span class="inline-block bg-white text-slate-800 border border-slate-200 font-bold px-2.5 py-1 rounded-lg text-xs sm:text-sm mr-1.5 mb-1.5 shadow-sm whitespace-nowrap">${h}</span>`).join('');
       document.getElementById('qTitle').innerHTML = `<div class="mt-2 flex flex-wrap">${herbBadges}</div>`;
       
       if (item.efficacy) {
