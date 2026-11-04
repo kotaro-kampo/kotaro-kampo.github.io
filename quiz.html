@@ -196,6 +196,13 @@
             </button>
           </div>
 
+          <!-- カラー凡例（処方名⇒生薬の時のみ表示） -->
+          <div id="resultLegend" class="flex items-center justify-center gap-3 text-[11px] text-slate-500 mb-3 py-1.5 px-2 bg-slate-50 rounded-xl border border-slate-100 hidden">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-[#185b37] inline-block shrink-0"></span> 正解</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block shrink-0"></span> 選び忘れ</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block shrink-0"></span> 不正解</span>
+          </div>
+
           <!-- 正解生薬リスト & 効能効果 -->
           <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs mb-3">
             <div class="font-bold text-slate-600 mb-1.5 flex items-center gap-1.5">
@@ -847,15 +854,23 @@
         const isSelected = selectedHerbs.has(h);
         const isRealCorrect = correctHerbs.has(h);
 
-        if (isRealCorrect) {
+        if (isSelected && isRealCorrect) {
+          // 選択して正解（緑）
           chip.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-700');
           chip.classList.add('bg-[#185b37]', 'border-[#185b37]', 'text-white');
           icon.className = 'fa-solid fa-check-circle text-[10px] sm:text-xs text-emerald-200 chip-icon shrink-0';
+        } else if (!isSelected && isRealCorrect) {
+          // 本来正解だが未選択・選び忘れ（黄色）
+          chip.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-700');
+          chip.classList.add('bg-amber-500', 'border-amber-600', 'text-white');
+          icon.className = 'fa-solid fa-circle-exclamation text-[10px] sm:text-xs text-amber-100 chip-icon shrink-0';
         } else if (isSelected && !isRealCorrect) {
+          // 誤って選択（赤）
           chip.classList.remove('bg-[#185b37]', 'border-[#185b37]', 'text-white');
           chip.classList.add('bg-rose-500', 'border-rose-600', 'text-white', 'wrong-anim');
           icon.className = 'fa-solid fa-xmark text-[10px] sm:text-xs text-rose-200 chip-icon shrink-0';
         } else {
+          // 未選択のダミー生薬
           chip.classList.add('opacity-30');
         }
       });
@@ -948,6 +963,14 @@
       document.getElementById('scoreCount').textContent = score;
 
       const expArea = document.getElementById('explanationArea');
+      const legend = document.getElementById('resultLegend');
+      if (legend) {
+        if (activeFilter.mode === 'prescToHerb') {
+          legend.classList.remove('hidden');
+        } else {
+          legend.classList.add('hidden');
+        }
+      }
       const banner = document.getElementById('resultBanner');
       const icon = document.getElementById('resultIcon');
       const status = document.getElementById('resultStatus');
