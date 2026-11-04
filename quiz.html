@@ -160,7 +160,7 @@
       </div>
 
       <!-- クイズカード -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 flex-1 flex flex-col justify-between">
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-4 sm:p-6 flex-1 flex flex-col justify-between">
 
         <!-- 問題文エリア -->
         <div id="questionArea" class="mb-5">
@@ -772,14 +772,14 @@
 
       let html = `
         <div class="mb-4">
-          <div class="flex flex-wrap gap-2.5 justify-center py-2" id="herbChipsBox">
+          <div class="grid grid-cols-3 gap-1.5 sm:gap-2.5 py-1" id="herbChipsBox">
       `;
 
       allChoices.forEach(herb => {
         html += `
-          <button type="button" class="herb-chip px-3.5 py-2 rounded-2xl border-2 border-slate-200 bg-slate-50 text-slate-700 font-bold text-sm shadow-sm flex items-center gap-1.5 hover:border-[#185b37] whitespace-nowrap" data-herb="${herb}">
-            <i class="fa-regular fa-circle text-xs text-slate-300 chip-icon"></i>
-            <span>${herb}</span>
+          <button type="button" class="herb-chip px-1.5 sm:px-3 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border-2 border-slate-200 bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-xs flex items-center justify-center gap-1 sm:gap-1.5 hover:border-[#185b37] whitespace-nowrap overflow-hidden transition active:scale-95" data-herb="${herb}">
+            <i class="fa-regular fa-circle text-[10px] sm:text-xs text-slate-300 chip-icon shrink-0"></i>
+            <span class="truncate">${herb}</span>
           </button>
         `;
       });
@@ -808,12 +808,12 @@
             selectedHerbs.delete(herb);
             chip.classList.remove('border-[#185b37]', 'bg-[#185b37]', 'text-white');
             chip.classList.add('border-slate-200', 'bg-slate-50', 'text-slate-700');
-            icon.className = 'fa-regular fa-circle text-xs text-slate-300 chip-icon';
+            icon.className = 'fa-regular fa-circle text-[10px] sm:text-xs text-slate-300 chip-icon shrink-0';
           } else {
             selectedHerbs.add(herb);
             chip.classList.add('border-[#185b37]', 'bg-[#185b37]', 'text-white');
             chip.classList.remove('border-slate-200', 'bg-slate-50', 'text-slate-700');
-            icon.className = 'fa-solid fa-check text-xs text-white chip-icon';
+            icon.className = 'fa-solid fa-check text-[10px] sm:text-xs text-white chip-icon shrink-0';
           }
           document.getElementById('selectedCountText').textContent = selectedHerbs.size;
         });
@@ -850,11 +850,11 @@
         if (isRealCorrect) {
           chip.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-700');
           chip.classList.add('bg-[#185b37]', 'border-[#185b37]', 'text-white');
-          icon.className = 'fa-solid fa-check-circle text-xs text-emerald-200 chip-icon';
+          icon.className = 'fa-solid fa-check-circle text-[10px] sm:text-xs text-emerald-200 chip-icon shrink-0';
         } else if (isSelected && !isRealCorrect) {
           chip.classList.remove('bg-[#185b37]', 'border-[#185b37]', 'text-white');
           chip.classList.add('bg-rose-500', 'border-rose-600', 'text-white', 'wrong-anim');
-          icon.className = 'fa-solid fa-xmark text-xs text-rose-200 chip-icon';
+          icon.className = 'fa-solid fa-xmark text-[10px] sm:text-xs text-rose-200 chip-icon shrink-0';
         } else {
           chip.classList.add('opacity-30');
         }
