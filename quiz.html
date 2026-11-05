@@ -911,18 +911,27 @@
       let html = '<div class="grid grid-cols-1 gap-2.5 my-auto">';
       choices.forEach((choice, idx) => {
         let badge = '';
-        if (choice.type === 'medical') badge = '<span class="text-[10px] font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded ml-1">医療</span>';
-        else if (choice.otcCategory === 'sajikurabu') badge = '<span class="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded ml-1">匙</span>';
-        else if (choice.otcCategory === 'kyoryokukai') badge = '<span class="text-[10px] font-bold bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded ml-1">協</span>';
+        if (choice.type === 'medical') {
+          badge = '<span class="choice-badge text-[10px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded whitespace-nowrap shrink-0">医療</span>';
+        } else if (choice.otcCategory === 'sajikurabu') {
+          badge = '<span class="choice-badge text-[10px] font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded whitespace-nowrap shrink-0">匙</span>';
+        } else if (choice.otcCategory === 'kyoryokukai') {
+          badge = '<span class="choice-badge text-[10px] font-bold bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded whitespace-nowrap shrink-0">協</span>';
+        }
+
+        let safeName = escapeHtml(choice.name);
+        safeName = safeName.replace(/(「[^」]+」)/g, '<span class="inline-block whitespace-nowrap">$1</span>');
 
         html += `
-          <button type="button" class="choice-btn w-full p-4 rounded-2xl border-2 border-slate-200 hover:border-[#185b37] hover:bg-emerald-50/30 text-left font-bold text-base text-slate-800 flex items-center justify-between transition shadow-sm" data-id="${choice.name}">
-            <div class="flex items-center">
-              <span class="w-6 h-6 rounded-full bg-slate-100 text-slate-500 text-xs flex items-center justify-center mr-3 font-semibold">${idx + 1}</span>
-              <span>${choice.name}</span>
-              ${badge}
+          <button type="button" class="choice-btn w-full p-3 sm:p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-[#185b37] hover:bg-emerald-50/30 text-left flex items-center justify-between transition shadow-sm gap-2.5" data-id="${choice.name}">
+            <div class="flex items-center min-w-0 flex-1 gap-2.5">
+              <span class="w-6 h-6 rounded-full bg-slate-100 text-slate-500 text-xs flex items-center justify-center font-semibold shrink-0 choice-idx">${idx + 1}</span>
+              <span class="font-bold text-sm sm:text-base text-slate-800 break-words flex-1 choice-name leading-snug">${safeName}</span>
             </div>
-            <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
+            <div class="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+              ${badge}
+              <i class="fa-solid fa-chevron-right text-xs text-slate-300 choice-icon shrink-0"></i>
+            </div>
           </button>
         `;
       });
@@ -938,14 +947,51 @@
           const isCorrect = btn.dataset.id === item.name;
 
           btns.forEach(b => {
-            if (b.dataset.id === item.name) {
-              b.classList.remove('border-slate-200');
-              b.classList.add('bg-[#185b37]', 'border-[#185b37]', 'text-white', 'correct-anim');
-              b.querySelector('i').className = 'fa-solid fa-circle-check text-white text-base';
-            } else if (b === btn && !isCorrect) {
-              b.classList.remove('border-slate-200');
-              b.classList.add('bg-rose-500', 'border-rose-600', 'text-white', 'wrong-anim');
-              b.querySelector('i').className = 'fa-solid fa-circle-xmark text-white text-base';
+            const isTarget = b.dataset.id === item.name;
+            const isClickedWrong = (b === btn && !isCorrect);
+
+            if (isTarget) {
+              b.classList.remove('border-slate-200', 'bg-white', 'hover:border-[#185b37]', 'hover:bg-emerald-50/30');
+              b.classList.add('bg-[#185b37]', 'border-[#185b37]', 'correct-anim');
+              
+              const nameEl = b.querySelector('.choice-name');
+              if (nameEl) {
+                nameEl.classList.remove('text-slate-800');
+                nameEl.classList.add('text-white');
+              }
+              const idxEl = b.querySelector('.choice-idx');
+              if (idxEl) {
+                idxEl.className = 'w-6 h-6 rounded-full bg-white/20 text-white text-xs flex items-center justify-center font-semibold shrink-0 choice-idx';
+              }
+              const badgeEl = b.querySelector('.choice-badge');
+              if (badgeEl) {
+                badgeEl.className = 'choice-badge text-[10px] font-bold bg-white/20 text-white px-1.5 py-0.5 rounded whitespace-nowrap shrink-0';
+              }
+              const iconEl = b.querySelector('.choice-icon');
+              if (iconEl) {
+                iconEl.className = 'fa-solid fa-circle-check text-white text-base shrink-0 choice-icon';
+              }
+            } else if (isClickedWrong) {
+              b.classList.remove('border-slate-200', 'bg-white', 'hover:border-[#185b37]', 'hover:bg-emerald-50/30');
+              b.classList.add('bg-rose-500', 'border-rose-600', 'wrong-anim');
+
+              const nameEl = b.querySelector('.choice-name');
+              if (nameEl) {
+                nameEl.classList.remove('text-slate-800');
+                nameEl.classList.add('text-white');
+              }
+              const idxEl = b.querySelector('.choice-idx');
+              if (idxEl) {
+                idxEl.className = 'w-6 h-6 rounded-full bg-white/20 text-white text-xs flex items-center justify-center font-semibold shrink-0 choice-idx';
+              }
+              const badgeEl = b.querySelector('.choice-badge');
+              if (badgeEl) {
+                badgeEl.className = 'choice-badge text-[10px] font-bold bg-white/20 text-white px-1.5 py-0.5 rounded whitespace-nowrap shrink-0';
+              }
+              const iconEl = b.querySelector('.choice-icon');
+              if (iconEl) {
+                iconEl.className = 'fa-solid fa-circle-xmark text-white text-base shrink-0 choice-icon';
+              }
             } else {
               b.classList.add('opacity-40');
             }
