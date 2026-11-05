@@ -482,4 +482,7 @@ async function main() {
     console.log("Successfully generated data.json!");
 }
 
-main().catch(console.error);
+main().catch(err => {
+    console.error("Fatal error in main():", err);
+    process.exit(1);
+});
