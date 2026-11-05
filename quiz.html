@@ -1296,31 +1296,73 @@
     }
 
     function pickSimilarPrescriptions(targetItem, count) {
-      const targetHerbs = new Set((targetItem.ingredients || []).filter(i => !i.isExtract).map(i => i.name));
+      const getHerbSignature = (item) => {
+        return (item.ingredients || item.components || [])
+          .filter(i => !i.isExtract && i.name)
+          .map(i => i.name.trim())
+          .sort()
+          .join(',');
+      };
 
-      const scored = currentPool
-        .filter(item => item.name !== targetItem.name)
+      const targetSignature = getHerbSignature(targetItem);
+      const targetHerbs = new Set(
+        (targetItem.ingredients || targetItem.components || [])
+          .filter(i => !i.isExtract && i.name)
+          .map(i => i.name.trim())
+      );
+
+      // 候補プールから、正解と生薬が完全に一致するもの、および同名・同サブカテゴリ処方を除外
+      const eligiblePool = currentPool.filter(item => {
+        if (item.name === targetItem.name) return false;
+        if (getHerbSignature(item) === targetSignature) return false;
+        if (targetItem.subCategory && item.subCategory && targetItem.subCategory === item.subCategory) return false;
+        return true;
+      });
+
+      // 共通生薬数でスコアリング
+      const scored = eligiblePool
         .map(item => {
-          const herbs = (item.ingredients || []).filter(i => !i.isExtract).map(i => i.name);
+          const itemHerbs = (item.ingredients || item.components || [])
+            .filter(i => !i.isExtract && i.name)
+            .map(i => i.name.trim());
           let matchCount = 0;
-          herbs.forEach(h => {
+          itemHerbs.forEach(h => {
             if (targetHerbs.has(h)) matchCount++;
           });
-          return { item, matchCount, total: herbs.length };
+          return { item, matchCount, signature: getHerbSignature(item) };
         })
         .filter(s => s.matchCount > 0)
         .sort((a, b) => b.matchCount - a.matchCount);
 
-      const topSimilar = scored.slice(0, 10).map(s => s.item);
-      const shuffled = topSimilar.sort(() => Math.random() - 0.5);
-      
-      const result = shuffled.slice(0, count);
-      while (result.length < count) {
-        const randomItem = currentPool[Math.floor(Math.random() * currentPool.length)];
-        if (randomItem.name !== targetItem.name && !result.some(r => r.name === randomItem.name)) {
-          result.push(randomItem);
+      const result = [];
+      const usedSignatures = new Set([targetSignature]);
+      const usedNames = new Set([targetItem.name]);
+
+      // スコア上位15件からランダムにピック（類似度が高く、かつ生薬構成が重複しない選択肢）
+      const topPool = scored.slice(0, 15).sort(() => Math.random() - 0.5);
+      for (let s of topPool) {
+        if (result.length >= count) break;
+        if (!usedSignatures.has(s.signature) && !usedNames.has(s.item.name)) {
+          result.push(s.item);
+          usedSignatures.add(s.signature);
+          usedNames.add(s.item.name);
         }
       }
+
+      // もし足りない場合は残りのeligiblePoolからランダム補充（重複排除を維持）
+      if (result.length < count) {
+        const remainingShuffled = eligiblePool.sort(() => Math.random() - 0.5);
+        for (let item of remainingShuffled) {
+          if (result.length >= count) break;
+          const sig = getHerbSignature(item);
+          if (!usedSignatures.has(sig) && !usedNames.has(item.name)) {
+            result.push(item);
+            usedSignatures.add(sig);
+            usedNames.add(item.name);
+          }
+        }
+      }
+
       return result;
     }
   </script>
