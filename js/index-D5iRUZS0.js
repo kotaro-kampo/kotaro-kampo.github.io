@@ -25773,7 +25773,7 @@ const B0 = [
   [/^芎帰膠艾湯/, "きゅうききょうがいとう"],
   [/^芎帰/, "きゅうき"],
   [/^玉屏風散/, "ぎょくへいふうさん"],
-  [/^金羚感冒散/, "きんれいかんぼうさん"],
+  [/^銀翹散/, "ぎんぎょうさん"],[/^金羚感冒散/, "きんれいかんぼうさん"],
   [/^金羚感冒錠/, "きんれいかんぼうじょう"],
   [/^九味檳榔湯/, "くみびんろうとう"],
   [/^荊芥連翹湯/, "けいがいれんぎょうとう"],
@@ -27227,14 +27227,15 @@ function QA(n, r, l, s, o, f, d, excIng) {
           .map((w) => DA(w));
         l === "name"
           ? (p = p.filter((w) =>
-              x.every((O) =>
-                w.sortKey.includes(O)
+              x.every((O) => {
+                const Oh = O.replace(/[ァ-ン]/g, (e) => String.fromCharCode(e.charCodeAt(0) - 96));
+                return (w.sortKey.includes(O) || w.sortKey.includes(Oh))
                   ? !0
                   : yl(w.name, O) ||
                     yl(w.rawName, O) ||
                     yl(w.subCategory || "", O) ||
-                    (w.subCategorySortKey && w.subCategorySortKey.includes(O)),
-              ),
+                    (w.subCategorySortKey && (w.subCategorySortKey.includes(O) || w.subCategorySortKey.includes(Oh)));
+              }),
             ))
           : l === "ingredient"
             ? (p = p.filter((w) => {

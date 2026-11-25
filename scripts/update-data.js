@@ -418,13 +418,16 @@ async function main() {
             const w = a.attr("href").replace(/^\//, "");
             const x = a.text().trim();
             const O = $(tds[2]).text().trim();
-            const C = L0(O);
+            let C = L0(O);
             const N = U0(x); // Keep original display name with Kanji conversion!
+            const matchKey = U0(xA(x));
+            if (matchKey.includes("金羚感冒")) {
+                C = "銀翹散";
+            }
             const sortKey = Q0(N); // Convert Kanji to Hiragana for perfect Gojuon sorting
             const subCategorySortKey = Q0(C);
             
             // Match badge using fully converted Kanji names to absorb KEGG/Kotaro differences
-            const matchKey = U0(xA(x));
             let B = badgeMap[matchKey] || "other";
             
             if (matchKey.includes("茵陳五苓散")) B = "sajikurabu";
